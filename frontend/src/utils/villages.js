@@ -1,0 +1,61 @@
+export const villages = [
+  {
+    id: 1,
+    name: "Rampur",
+    district: "Bhopal",
+    riskLevel: "HIGH",
+    hazardType: "Flood",
+    priority: "HIGH",
+    population: 3200,
+    lat: 23.2599,
+    lng: 77.4126,
+  },
+
+  {
+    id: 2,
+    name: "Sehore",
+    district: "Sehore",
+    riskLevel: "CRITICAL",
+    hazardType: "Flood",
+    priority: "IMMEDIATE",
+    population: 5000,
+    lat: 23.2032,
+    lng: 77.085,
+  },
+
+  {
+    id: 3,
+    name: "Vidisha",
+    district: "Vidisha",
+    riskLevel: "MEDIUM",
+    hazardType: "Landslide",
+    priority: "NORMAL",
+    population: 2800,
+    lat: 23.5235,
+    lng: 77.806,
+  },
+
+  {
+    id: 4,
+    name: "Berasia",
+    district: "Bhopal",
+    riskLevel: "LOW",
+    hazardType: "Flood",
+    priority: "NORMAL",
+    population: 2100,
+    lat: 23.63,
+    lng: 77.43,
+  },
+
+  {
+    id: 5,
+    name: "Ashta",
+    district: "Sehore",
+    riskLevel: "HIGH",
+    hazardType: "Landslide",
+    priority: "HIGH",
+    population: 3700,
+    lat: 23.02,
+    lng: 76.72,
+  },
+];

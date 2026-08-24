@@ -4,6 +4,9 @@ import HazardFilter from "../filters/HazardFilter";
 import PriorityFilter from "../filters/PriorityFilter";
 
 const Sidebar = ({
+
+    villages,
+
   districtFilter,
   setDistrictFilter,
 
@@ -29,8 +32,10 @@ const Sidebar = ({
       <div style={{ marginTop: "25px" }}>
 
         <DistrictFilter
+
           value={districtFilter}
           onChange={setDistrictFilter}
+           villages={villages}
         />
 
         <RiskFilter

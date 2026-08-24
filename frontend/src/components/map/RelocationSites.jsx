@@ -10,14 +10,15 @@ const relocationIcon = L.divIcon({
       style="
         width: 34px;
         height: 34px;
-        background: #16a34a;
-        border: 3px solid white;
+        background: rgba(22, 163, 74, 0.55);
+        border: 3px solid rgba(255, 255, 255, 0.75);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         font-size: 18px;
+        opacity: 0.75;
       "
     >
       🏠

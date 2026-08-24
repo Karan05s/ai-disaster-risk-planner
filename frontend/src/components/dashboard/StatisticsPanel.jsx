@@ -55,7 +55,7 @@ const StatisticsPanel = ({ villages }) => {
     background: "#ffffff",
     border: "1px solid #e2e8f0",
     borderRadius: "12px",
-    padding: "18px",
+    padding: "12px",
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
   };
 
@@ -90,7 +90,7 @@ const StatisticsPanel = ({ villages }) => {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
+        gridTemplateColumns: "1fr",
         gap: "15px",
         marginBottom: "15px",
       }}

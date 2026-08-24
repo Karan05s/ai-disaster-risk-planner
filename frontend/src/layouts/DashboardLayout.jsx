@@ -4,6 +4,9 @@ import Sidebar from "../components/common/Sidebar";
 const DashboardLayout = ({
   children,
 
+    villages,
+
+
   districtFilter,
   setDistrictFilter,
 
@@ -27,6 +30,9 @@ const DashboardLayout = ({
         }}
       >
         <Sidebar
+
+            villages={villages}
+            
           districtFilter={districtFilter}
           setDistrictFilter={setDistrictFilter}
 

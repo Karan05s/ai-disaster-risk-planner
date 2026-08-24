@@ -1,4 +1,3 @@
-
 export const calculateDistance = (
   lat1,
   lng1,
@@ -30,3 +29,119 @@ export const calculateDistance = (
 
   return R * c;
 };
+
+// =====================================
+// FIND NEAREST RELOCATION SITE
+// =====================================
+
+export const findNearestSite = (
+  village,
+  relocationSites
+) => {
+  return relocationSites
+    .map((site) => ({
+      ...site,
+
+      distance: calculateDistance(
+        village.lat,
+        village.lng,
+        site.lat,
+        site.lng
+      ),
+    }))
+    .sort(
+      (a, b) =>
+        a.distance - b.distance
+    )[0];
+};
+
+// =====================================
+// FILTER AVAILABLE SITES
+// =====================================
+
+export const getAvailableSites =
+  (sites) => {
+    return sites.filter(
+      (site) =>
+        site.status === "AVAILABLE"
+    );
+  };
+
+// =====================================
+// FILTER SITES BY CAPACITY
+// =====================================
+
+export const getSuitableSites = (
+  village,
+  sites
+) => {
+  return sites.filter(
+    (site) =>
+      site.availableCapacity >=
+      village.population
+  );
+};
+
+// =====================================
+// GET RISK COLOR
+// =====================================
+
+export const getRiskColor = (
+  riskLevel
+) => {
+  switch (riskLevel) {
+    case "CRITICAL":
+      return "#dc2626";
+
+    case "HIGH":
+      return "#ea580c";
+
+    case "MEDIUM":
+      return "#ca8a04";
+
+    case "LOW":
+      return "#16a34a";
+
+    default:
+      return "#64748b";
+  }
+};
+
+// =====================================
+// GET PRIORITY COLOR
+// =====================================
+
+export const getPriorityColor =
+  (priority) => {
+    switch (priority) {
+      case "IMMEDIATE":
+        return "#dc2626";
+
+      case "HIGH":
+        return "#ea580c";
+
+      case "NORMAL":
+        return "#2563eb";
+
+      default:
+        return "#64748b";
+    }
+  };
+
+// =====================================
+// MAP CENTER OF INDIA
+// =====================================
+
+export const INDIA_CENTER = [
+  22.5,
+  79.0,
+];
+
+// =====================================
+// INDIA BOUNDS
+// =====================================
+
+export const INDIA_BOUNDS = [
+  [6.5, 68.0],
+  [37.5, 97.5],
+];

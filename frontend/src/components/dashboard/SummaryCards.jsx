@@ -33,7 +33,7 @@ const SummaryCards = ({ villages }) => {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
+        gridTemplateColumns: "1fr",
         gap: "10px",
         marginBottom: "10px",
       }}
@@ -51,7 +51,7 @@ const SummaryCards = ({ villages }) => {
             alignItems: "center",
             justifyContent: "space-between",
 
-            height: "48px",
+            height: "42px",
 
             boxShadow:
               "0 1px 4px rgba(0,0,0,0.06)",

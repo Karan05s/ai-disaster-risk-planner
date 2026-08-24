@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import VillageMarkers from "./VillageMarkers";
 import HazardLayer from "./HazardLayer";
 import RelocationSites from "./RelocationSites";
@@ -7,13 +9,26 @@ import MapFocus from "./MapFocus";
 import {
   MapContainer,
   TileLayer,
+  useMap,
 } from "react-leaflet";
 
-// India ka bounding box - fit karne ke liye aur pan-restrict karne ke liye
 const INDIA_BOUNDS = [
-  [6.5, 68.0],   // south-west corner
-  [37.5, 97.5],  // north-east corner
+  [6.5, 68.0],
+  [37.5, 97.5],
 ];
+
+// India ko perfectly fit karne ke liye
+const IndiaBoundsController = () => {
+  const map = useMap();
+
+  useEffect(() => {
+    map.fitBounds(INDIA_BOUNDS, {
+      padding: [20, 20],
+    });
+  }, [map]);
+
+  return null;
+};
 
 const MapView = ({
   villages,
@@ -21,50 +36,43 @@ const MapView = ({
   selectedVillage,
   focusLocation,
 }) => {
-
   return (
     <>
       <MapContainer
-        bounds={INDIA_BOUNDS}
-        boundsOptions={{ padding: [10, 10] }}
-        minZoom={4}
+        center={[22.5, 79]}
+        zoom={5}
+        minZoom={5}
+        maxZoom={12}
         maxBounds={INDIA_BOUNDS}
-        maxBoundsViscosity={1.0}
+        maxBoundsViscosity={1}
         style={{
           height: "100%",
           width: "100%",
+          borderRadius: "12px",
         }}
       >
+        <IndiaBoundsController />
+
         <TileLayer
           attribution="&copy; OpenStreetMap"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-          {/* MAP FOCUS */}
-
         <MapFocus
           location={focusLocation}
         />
 
-        {/* HAZARD POLYGONS */}
-
         <HazardLayer
           hazards={hazards}
         />
-
-        {/* VILLAGE MARKERS */}
 
         <VillageMarkers
           villages={villages}
           selectedVillage={selectedVillage}
         />
 
-        {/* RELOCATION SITES */}
-
         <RelocationSites />
       </MapContainer>
-
-      {/* MAP LEGEND */}
 
       <MapLegend />
     </>

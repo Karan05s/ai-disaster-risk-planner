@@ -50,7 +50,7 @@ public class RelocationDecisionService {
                 .build();
         RelocationDecision saved = decisionRepository.save(decision);
 
-        auditLogService.record("RelocationDecision", saved.getId().toString(), "CREATE", null, null, saved);
+        auditLogService.record("RelocationDecision", saved.getId().toString(), "CREATE", null, null, RelocationDecisionResponse.from(saved));
         return RelocationDecisionResponse.from(saved);
     }
 
@@ -81,7 +81,7 @@ public class RelocationDecisionService {
         decision.setDecidedAt(Instant.now());  // server-side only
 
         RelocationDecision saved = decisionRepository.save(decision);
-        auditLogService.record("RelocationDecision", saved.getId().toString(), "APPROVE", actor, before, saved);
+        auditLogService.record("RelocationDecision", saved.getId().toString(), "APPROVE", actor, before, RelocationDecisionResponse.from(saved));
         return RelocationDecisionResponse.from(saved);
     }
 
@@ -105,7 +105,7 @@ public class RelocationDecisionService {
         decision.setDecidedAt(Instant.now());
 
         RelocationDecision saved = decisionRepository.save(decision);
-        auditLogService.record("RelocationDecision", saved.getId().toString(), "OVERRIDE", actor, before, saved);
+        auditLogService.record("RelocationDecision", saved.getId().toString(), "OVERRIDE", actor, before,  RelocationDecisionResponse.from(saved));
         return RelocationDecisionResponse.from(saved);
     }
 
@@ -123,7 +123,7 @@ public class RelocationDecisionService {
         decision.setDecidedAt(Instant.now());
 
         RelocationDecision saved = decisionRepository.save(decision);
-        auditLogService.record("RelocationDecision", saved.getId().toString(), "REJECT", actor, before, saved);
+        auditLogService.record("RelocationDecision", saved.getId().toString(), "REJECT", actor, before, RelocationDecisionResponse.from(saved));
         return RelocationDecisionResponse.from(saved);
     }
 

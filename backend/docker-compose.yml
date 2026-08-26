@@ -19,6 +19,9 @@ services:
       retries: 10
 
   backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: disaster-relocation-backend:1.0
     container_name: disaster-relocation-backend
     restart: unless-stopped

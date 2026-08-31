@@ -1,8 +1,8 @@
-import { useEffect } from "react";
-
+import { useEffect, useState } from "react";
 import VillageMarkers from "./VillageMarkers";
 import HazardLayer from "./HazardLayer";
 import RelocationSites from "./RelocationSites";
+import EvacuationRoute from "./EvacuationRoute";
 import MapLegend from "./MapLegend";
 import MapFocus from "./MapFocus";
 
@@ -16,6 +16,12 @@ const INDIA_BOUNDS = [
   [6.5, 68.0],
   [37.5, 97.5],
 ];
+
+const TILES = {
+  VOYAGER: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+  DARK: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  OSM: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+};
 
 // India ko perfectly fit karne ke liye
 const IndiaBoundsController = () => {
@@ -34,15 +40,88 @@ const MapView = ({
   villages,
   hazards,
   selectedVillage,
+  onSelectVillage,
   focusLocation,
 }) => {
+  const [tileTheme, setTileTheme] = useState("VOYAGER");
+  const [showRoutes, setShowRoutes] = useState(true);
+  const [showHazards, setShowHazards] = useState(true);
+  const [showShelters, setShowShelters] = useState(true);
+
   return (
-    <>
+    <div style={{ position: "relative", height: "100%", width: "100%" }}>
+      {/* MAP LAYER CONTROLS (Floating HUD) */}
+      <div
+        style={{
+          position: "absolute",
+          top: "15px",
+          right: "15px",
+          zIndex: 1000,
+          background: "rgba(15, 23, 42, 0.85)",
+          backdropFilter: "blur(8px)",
+          padding: "8px 12px",
+          borderRadius: "8px",
+          display: "flex",
+          gap: "8px",
+          alignItems: "center",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+          border: "1px solid rgba(255,255,255,0.15)",
+        }}
+      >
+        <button
+          onClick={() => setTileTheme(tileTheme === "VOYAGER" ? "DARK" : "VOYAGER")}
+          style={{
+            background: tileTheme === "DARK" ? "#3b82f6" : "#334155",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            padding: "5px 10px",
+            fontSize: "11px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+        >
+          {tileTheme === "DARK" ? "🌙 Dark Map" : "☀️ Clean Map"}
+        </button>
+
+        <button
+          onClick={() => setShowHazards(!showHazards)}
+          style={{
+            background: showHazards ? "#ea580c" : "#334155",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            padding: "5px 9px",
+            fontSize: "11px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+        >
+          {showHazards ? "🌊 Hazards ON" : "Hazards OFF"}
+        </button>
+
+        <button
+          onClick={() => setShowShelters(!showShelters)}
+          style={{
+            background: showShelters ? "#16a34a" : "#334155",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            padding: "5px 9px",
+            fontSize: "11px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+        >
+          {showShelters ? "🏠 Shelters ON" : "Shelters OFF"}
+        </button>
+      </div>
+
       <MapContainer
         center={[22.5, 79]}
         zoom={5}
-        minZoom={5}
-        maxZoom={12}
+        minZoom={4}
+        maxZoom={14}
         maxBounds={INDIA_BOUNDS}
         maxBoundsViscosity={1}
         style={{
@@ -54,28 +133,28 @@ const MapView = ({
         <IndiaBoundsController />
 
         <TileLayer
-          attribution="&copy; OpenStreetMap"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+          url={TILES[tileTheme] || TILES.VOYAGER}
         />
 
-        <MapFocus
-          location={focusLocation}
-        />
+        <MapFocus location={focusLocation} />
 
-        <HazardLayer
-          hazards={hazards}
-        />
+        {showHazards && <HazardLayer hazards={hazards} />}
 
         <VillageMarkers
           villages={villages}
           selectedVillage={selectedVillage}
+          onSelectVillage={onSelectVillage}
         />
 
-        <RelocationSites />
+        {showShelters && <RelocationSites />}
+
+        {/* HUNGARIAN OPTIMAL EVACUATION CORRIDOR */}
+        {showRoutes && <EvacuationRoute selectedVillage={selectedVillage} />}
       </MapContainer>
 
       <MapLegend />
-    </>
+    </div>
   );
 };
 

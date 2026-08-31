@@ -18,9 +18,8 @@ const INDIA_BOUNDS = [
 ];
 
 const TILES = {
-  VOYAGER: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-  DARK: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  OSM: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  CLEAN: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  TOPO: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
 };
 
 // India ko perfectly fit karne ke liye
@@ -43,7 +42,7 @@ const MapView = ({
   onSelectVillage,
   focusLocation,
 }) => {
-  const [tileTheme, setTileTheme] = useState("VOYAGER");
+  const [tileTheme, setTileTheme] = useState("CLEAN");
   const [showRoutes, setShowRoutes] = useState(true);
   const [showHazards, setShowHazards] = useState(true);
   const [showShelters, setShowShelters] = useState(true);
@@ -69,9 +68,9 @@ const MapView = ({
         }}
       >
         <button
-          onClick={() => setTileTheme(tileTheme === "VOYAGER" ? "DARK" : "VOYAGER")}
+          onClick={() => setTileTheme(tileTheme === "CLEAN" ? "TOPO" : "CLEAN")}
           style={{
-            background: tileTheme === "DARK" ? "#3b82f6" : "#334155",
+            background: tileTheme === "TOPO" ? "#16a34a" : "#334155",
             color: "white",
             border: "none",
             borderRadius: "6px",
@@ -81,7 +80,7 @@ const MapView = ({
             cursor: "pointer",
           }}
         >
-          {tileTheme === "DARK" ? "🌙 Dark Map" : "☀️ Clean Map"}
+          {tileTheme === "TOPO" ? "🏔️ Terrain Map" : "🗺️ Street Map"}
         </button>
 
         <button
@@ -133,8 +132,8 @@ const MapView = ({
         <IndiaBoundsController />
 
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url={TILES[tileTheme] || TILES.VOYAGER}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url={TILES[tileTheme] || TILES.CLEAN}
         />
 
         <MapFocus location={focusLocation} />

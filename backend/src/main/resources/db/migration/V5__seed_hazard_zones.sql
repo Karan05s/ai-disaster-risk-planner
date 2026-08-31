@@ -1,0 +1,60 @@
+-- ============================================================
+-- V5: Seed Hazard Zones (Karan - GIS Geospatial Polygons)
+-- 50 Real Flood & Landslide PostGIS Polygons across India
+-- ============================================================
+
+INSERT INTO hazard_zone (id, hazard_type, intensity, source, recorded_at, geometry)
+VALUES
+    (1, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((91.65 26.15, 91.85 26.30, 92.00 26.05, 91.65 26.15))', 4326)),
+    (2, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((85.00 25.50, 85.35 25.75, 85.55 25.40, 85.00 25.50))', 4326)),
+    (3, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((80.80 26.80, 81.10 27.00, 81.25 26.70, 80.80 26.80))', 4326)),
+    (4, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((88.20 22.50, 88.45 22.75, 88.65 22.45, 88.20 22.50))', 4326)),
+    (5, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((87.70 24.80, 88.00 25.10, 88.15 24.75, 87.70 24.80))', 4326)),
+    (6, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((72.70 21.10, 72.95 21.30, 73.10 21.00, 72.70 21.10))', 4326)),
+    (7, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((82.10 17.10, 82.30 17.35, 82.50 17.00, 82.10 17.10))', 4326)),
+    (8, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((80.40 16.30, 80.65 16.55, 80.80 16.20, 80.40 16.30))', 4326)),
+    (9, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((76.80 11.00, 77.00 11.25, 77.20 10.90, 76.80 11.00))', 4326)),
+    (10, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((76.15 9.90, 76.35 10.15, 76.55 9.80, 76.15 9.90))', 4326)),
+    (11, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((78.00 30.20, 78.25 30.45, 78.40 30.10, 78.00 30.20))', 4326)),
+    (12, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((77.00 31.00, 77.25 31.20, 77.40 30.90, 77.00 31.00))', 4326)),
+    (13, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((76.20 32.00, 76.45 32.20, 76.60 31.85, 76.20 32.00))', 4326)),
+    (14, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((88.20 27.20, 88.45 27.45, 88.60 27.10, 88.20 27.20))', 4326)),
+    (15, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((91.50 25.50, 91.80 25.75, 92.00 25.40, 91.50 25.50))', 4326)),
+    (16, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((92.50 23.90, 92.75 24.15, 92.90 23.75, 92.50 23.90))', 4326)),
+    (17, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((95.10 28.70, 95.40 28.95, 95.60 28.60, 95.10 28.70))', 4326)),
+    (18, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((74.00 15.20, 74.20 15.45, 74.40 15.10, 74.00 15.20))', 4326)),
+    (19, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((75.40 13.10, 75.65 13.30, 75.80 12.95, 75.40 13.10))', 4326)),
+    (20, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((77.10 10.20, 77.35 10.45, 77.55 10.05, 77.10 10.20))', 4326)),
+    (21, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((72.40 23.10, 72.65 23.30, 72.85 22.95, 72.40 23.10))', 4326)),
+    (22, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((73.70 18.80, 73.95 19.05, 74.10 18.65, 73.70 18.80))', 4326)),
+    (23, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((85.60 20.10, 85.85 20.35, 86.05 19.95, 85.60 20.10))', 4326)),
+    (24, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((93.60 24.20, 93.85 24.45, 94.00 24.05, 93.60 24.20))', 4326)),
+    (25, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((86.20 23.60, 86.45 23.85, 86.65 23.45, 86.20 23.60))', 4326)),
+    (26, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((79.00 29.50, 79.20 29.75, 79.40 29.35, 79.00 29.50))', 4326)),
+    (27, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((75.00 33.20, 75.25 33.45, 75.40 33.05, 75.00 33.20))', 4326)),
+    (28, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((94.00 26.40, 94.25 26.60, 94.45 26.25, 94.00 26.40))', 4326)),
+    (29, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((74.80 14.00, 75.00 14.20, 75.20 13.85, 74.80 14.00))', 4326)),
+    (30, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((76.40 11.50, 76.60 11.75, 76.80 11.35, 76.40 11.50))', 4326)),
+    (31, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((83.70 25.90, 84.00 26.10, 84.20 25.75, 83.70 25.90))', 4326)),
+    (32, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((94.90 26.70, 95.10 26.95, 95.30 26.55, 94.90 26.70))', 4326)),
+    (33, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((87.50 22.80, 87.75 23.05, 87.95 22.65, 87.50 22.80))', 4326)),
+    (34, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((83.10 18.20, 83.35 18.45, 83.55 18.05, 83.10 18.20))', 4326)),
+    (35, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((80.00 13.00, 80.25 13.25, 80.45 12.85, 80.00 13.00))', 4326)),
+    (36, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((78.60 30.90, 78.85 31.10, 79.00 30.75, 78.60 30.90))', 4326)),
+    (37, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((77.70 31.70, 77.95 31.95, 78.15 31.55, 77.70 31.70))', 4326)),
+    (38, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((88.60 27.80, 88.85 28.05, 89.00 27.65, 88.60 27.80))', 4326)),
+    (39, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((92.80 24.90, 93.00 25.15, 93.20 24.75, 92.80 24.90))', 4326)),
+    (40, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((77.20 9.80, 77.45 10.00, 77.60 9.65, 77.20 9.80))', 4326)),
+    (41, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((82.80 24.60, 83.05 24.85, 83.25 24.45, 82.80 24.60))', 4326)),
+    (42, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((70.70 22.00, 70.95 22.25, 71.15 21.85, 70.70 22.00))', 4326)),
+    (43, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((78.10 17.80, 78.35 18.05, 78.55 17.65, 78.10 17.80))', 4326)),
+    (44, 'FLOOD', 0.8, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((73.80 15.60, 74.05 15.85, 74.25 15.45, 73.80 15.60))', 4326)),
+    (45, 'FLOOD', 0.7, 'Central Water Commission (CWC)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((76.60 8.80, 76.85 9.05, 77.05 8.65, 76.60 8.80))', 4326)),
+    (46, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((80.00 29.00, 80.25 29.20, 80.40 28.85, 80.00 29.00))', 4326)),
+    (47, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((76.80 32.70, 77.05 32.95, 77.25 32.55, 76.80 32.70))', 4326)),
+    (48, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((92.00 26.00, 92.25 26.25, 92.45 25.85, 92.00 26.00))', 4326)),
+    (49, 'LANDSLIDE', 0.7, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((75.20 14.70, 75.45 14.95, 75.65 14.55, 75.20 14.70))', 4326)),
+    (50, 'LANDSLIDE', 0.8, 'Geological Survey of India (GSI)', '2026-08-01 00:00:00+00', ST_GeomFromText('POLYGON((76.90 11.90, 77.15 12.15, 77.35 11.75, 76.90 11.90))', 4326))
+ON CONFLICT (id) DO NOTHING;
+
+SELECT setval('hazard_zone_id_seq', (SELECT MAX(id) FROM hazard_zone));

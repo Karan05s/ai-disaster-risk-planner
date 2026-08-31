@@ -2,46 +2,69 @@ import { useEffect, useRef } from "react";
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
-// Risk level ke hisaab se color
+// Risk level color mapping
 const riskColors = {
-  CRITICAL: "#e63946", // red
-  HIGH: "#f77f00",     // orange
-  MEDIUM: "#e9c46a",   // yellow/gold
-  LOW: "#2a9d8f",      // green
+  CRITICAL: "#dc2626", // bold red
+  HIGH: "#ea580c",     // intense orange
+  MEDIUM: "#d97706",   // amber
+  LOW: "#16a34a",      // emerald green
 };
 
-// Custom colored circle icon banane ka function
-const createIcon = (riskLevel) => {
-  const color = riskColors[riskLevel] || "#6c757d"; // fallback grey
+const createIcon = (riskLevel, isAnomaly) => {
+  const color = riskColors[riskLevel] || "#6c757d";
+  const isCritical = riskLevel === "CRITICAL";
 
   return L.divIcon({
     className: "custom-village-marker",
     html: `
       <div style="
-        background-color: ${color};
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 0 4px rgba(0,0,0,0.5);
-      "></div>
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        ${isCritical ? `
+          <div style="
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(220, 38, 38, 0.35);
+            animation: pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+          "></div>
+        ` : ""}
+        <div style="
+          background-color: ${color};
+          width: ${isCritical ? "20px" : "16px"};
+          height: ${isCritical ? "20px" : "16px"};
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 9px;
+          color: white;
+          font-weight: bold;
+        ">
+          ${isAnomaly ? "⚠️" : ""}
+        </div>
+      </div>
     `,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-    popupAnchor: [0, -9],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
   });
 };
 
-const VillageMarkers = ({ villages, selectedVillage }) => {
+const VillageMarkers = ({ villages, selectedVillage, onSelectVillage }) => {
   const markerRefs = useRef({});
 
   useEffect(() => {
     if (!selectedVillage) {
       return;
     }
-
     const marker = markerRefs.current[selectedVillage.id];
-
     if (marker) {
       marker.openPopup();
     }
@@ -53,39 +76,57 @@ const VillageMarkers = ({ villages, selectedVillage }) => {
         <Marker
           key={village.id}
           position={[village.lat, village.lng]}
-          icon={createIcon(village.riskLevel)}
+          icon={createIcon(village.riskLevel, village.isAnomaly)}
+          eventHandlers={{
+            click: () => {
+              if (onSelectVillage) {
+                onSelectVillage(village);
+              }
+            },
+          }}
           ref={(marker) => {
             markerRefs.current[village.id] = marker;
           }}
         >
           <Popup>
-            <div>
-              <h3>{village.name}</h3>
+            <div style={{ minWidth: "180px", fontFamily: "system-ui, sans-serif" }}>
+              <div style={{ fontWeight: "700", fontSize: "14px", color: "#0f172a", marginBottom: "4px" }}>
+                {village.name}
+              </div>
+              <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
+                📍 {village.district}, {village.state}
+              </div>
 
-              <p>
-                <strong>District:</strong>{" "}
-                {village.district}
-              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", fontSize: "11.5px", marginBottom: "8px" }}>
+                <div>Risk: <strong style={{ color: riskColors[village.riskLevel] || "#64748b" }}>{village.riskLevel}</strong></div>
+                <div>Priority: <strong>{village.priority}</strong></div>
+                <div>Pop: <strong>{village.population?.toLocaleString()}</strong></div>
+                <div>Hazard: <strong>{village.hazardType}</strong></div>
+              </div>
 
-              <p>
-                <strong>Risk:</strong>{" "}
-                {village.riskLevel}
-              </p>
+              {village.dominantFactor && (
+                <div style={{ fontSize: "11px", background: "#f1f5f9", padding: "4px 6px", borderRadius: "4px", color: "#334155" }}>
+                  Driver: <strong>{village.dominantFactor}</strong>
+                </div>
+              )}
 
-              <p>
-                <strong>Hazard:</strong>{" "}
-                {village.hazardType}
-              </p>
-
-              <p>
-                <strong>Population:</strong>{" "}
-                {village.population}
-              </p>
-
-              <p>
-                <strong>Priority:</strong>{" "}
-                {village.priority}
-              </p>
+              <button
+                onClick={() => onSelectVillage && onSelectVillage(village)}
+                style={{
+                  marginTop: "8px",
+                  width: "100%",
+                  padding: "5px",
+                  background: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                View AI Reasoning & Route →
+              </button>
             </div>
           </Popup>
         </Marker>

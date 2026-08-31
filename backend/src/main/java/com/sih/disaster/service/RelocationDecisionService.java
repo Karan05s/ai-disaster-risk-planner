@@ -54,6 +54,7 @@ public class RelocationDecisionService {
         return RelocationDecisionResponse.from(saved);
     }
 
+    @Transactional(readOnly = true)
     public Page<RelocationDecisionResponse> list(DecisionStatus status, Pageable pageable) {
         Page<RelocationDecision> page = (status != null)
                 ? decisionRepository.findByStatus(status, pageable)

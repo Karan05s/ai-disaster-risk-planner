@@ -41,6 +41,7 @@ public class AuditLogService {
         auditLogRepository.save(log);
     }
 
+    @Transactional(readOnly = true)
     public Page<AuditLogResponse> search(String entity, Long actorId, Instant from, Instant to, Pageable pageable) {
         return auditLogRepository.search(entity, actorId, from, to, pageable).map(AuditLogResponse::from);
     }

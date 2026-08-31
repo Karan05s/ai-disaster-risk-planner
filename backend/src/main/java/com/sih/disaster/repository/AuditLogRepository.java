@@ -17,8 +17,8 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
             SELECT a FROM AuditLog a
             WHERE (:entity IS NULL OR a.entity = :entity)
               AND (:actorId IS NULL OR a.actor.id = :actorId)
-              AND (:from IS NULL OR a.timestamp >= :from)
-              AND (:to IS NULL OR a.timestamp <= :to)
+              AND (CAST(:from AS java.time.Instant) IS NULL OR a.timestamp >= :from)
+              AND (CAST(:to AS java.time.Instant) IS NULL OR a.timestamp <= :to)
             ORDER BY a.timestamp DESC
             """)
     Page<AuditLog> search(@Param("entity") String entity,

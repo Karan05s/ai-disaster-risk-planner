@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import MapView from "../components/map/MapContainer";
 
-import { villages } from "../utils/villages";
-import { hazards } from "../utils/hazards";
-
+import { villages as initialVillages } from "../utils/villages";
+import { hazards as initialHazards } from "../utils/hazards";
+import { getVillages, getHazardZones } from "../services/api";
 
 import SearchBar from "../components/dashboard/SearchBar";
 import SummaryCards from "../components/dashboard/SummaryCards";
@@ -14,29 +14,35 @@ import StatisticsPanel from "../components/dashboard/StatisticsPanel";
 import VillageDetails from "../components/village/VillageDetails";
 
 const Dashboard = () => {
-  const [districtFilter, setDistrictFilter] =
-    useState("ALL");
+  const [villagesList, setVillagesList] = useState(initialVillages);
+  const [hazardsList, setHazardsList] = useState(initialHazards);
+  const [districtFilter, setDistrictFilter] = useState("ALL");
+  const [riskFilter, setRiskFilter] = useState("ALL");
+  const [hazardFilter, setHazardFilter] = useState("ALL");
+  const [priorityFilter, setPriorityFilter] = useState("ALL");
+  const [selectedVillage, setSelectedVillage] = useState(null);
+  const [focusLocation, setFocusLocation] = useState(null);
 
-  const [riskFilter, setRiskFilter] =
-    useState("ALL");
-
-  const [hazardFilter, setHazardFilter] =
-    useState("ALL");
-
-  const [priorityFilter, setPriorityFilter] =
-    useState("ALL");
-
-  const [selectedVillage, setSelectedVillage] =
-    useState(null);
-
-  const [focusLocation, setFocusLocation] =
-    useState(null);
+  // Load live data from Backend & ML engine on mount
+  useEffect(() => {
+    async function loadData() {
+      const liveVillages = await getVillages();
+      if (liveVillages && liveVillages.length > 0) {
+        setVillagesList(liveVillages);
+      }
+      const liveHazards = await getHazardZones();
+      if (liveHazards && liveHazards.length > 0) {
+        setHazardsList(liveHazards);
+      }
+    }
+    loadData();
+  }, []);
 
   // =====================================
   // FILTER VILLAGES
   // =====================================
 
-  const filteredVillages = villages.filter(
+  const filteredVillages = villagesList.filter(
     (village) => {
       const districtMatch =
         districtFilter === "ALL" ||
@@ -69,32 +75,15 @@ const Dashboard = () => {
 
   const filteredHazards =
     hazardFilter === "ALL"
-      ? hazards
-      : hazards.filter(
+      ? hazardsList
+      : hazardsList.filter(
           (hazard) =>
             hazard.type === hazardFilter
         );
 
-    console.log("Total villages:", villages.length);
-
-console.log(
-  "Filtered villages:",
-  filteredVillages.length
-);
-
-console.log(
-  "Filters:",
-  {
-    districtFilter,
-    riskFilter,
-    hazardFilter,
-    priorityFilter,
-  }
-);
-
   return (
     <DashboardLayout
-      villages={villages}
+      villages={villagesList}
       districtFilter={districtFilter}
       setDistrictFilter={setDistrictFilter}
       riskFilter={riskFilter}

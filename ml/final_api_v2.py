@@ -55,7 +55,7 @@ BACKEND_LOGIN_URL = f"{BACKEND_URL}/api/auth/login"
 BACKEND_RISK_URL = f"{BACKEND_URL}/api/risk-scores/batch"
 BACKEND_PRIORITIZATION_URL = f"{BACKEND_URL}/api/prioritization"
 
-now_iso = lambda: datetime.now(timezone.utc).isoformat(timespec="seconds") + "Z"
+now_iso = lambda: datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 # ---------------------------------------------------------------------

@@ -32,7 +32,7 @@ PENALTY_CROSS_STATE = 1e9      # Effectively blocks cross-state assignments
 PENALTY_INSUFFICIENT_CAP = 1e6 # Discourages, but allows as fallback
 PENALTY_NO_CAPACITY_DATA = 1e6 # Sites with NaN capacity treated same as insufficient
 
-now_iso = lambda: datetime.now(timezone.utc).isoformat(timespec="seconds") + "Z"
+now_iso = lambda: datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 # -------------------------------------------------------------------------

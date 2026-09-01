@@ -6,9 +6,9 @@ const DistrictFilter = ({
 
   const districts = [
     ...new Set(
-      villages.map(
-        (village) => village.district
-      )
+      (villages || [])
+        .map((village) => village.district)
+        .filter(Boolean)
     ),
   ];
 

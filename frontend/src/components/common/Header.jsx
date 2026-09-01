@@ -2,61 +2,62 @@ const Header = () => {
   return (
     <header
       style={{
-        height: "64px",
-        background: "linear-gradient(90deg, #0f172a 0%, #1e293b 100%)",
-        color: "white",
+        height: "62px",
+        background: "#ffffff",
+        color: "#0f172a",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 24px",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        padding: "0 20px",
+        borderBottom: "1px solid #e2e8f0",
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
       }}
     >
       {/* BRAND & TITLE */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <div
           style={{
-            background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-            width: "38px",
-            height: "38px",
-            borderRadius: "10px",
+            background: "linear-gradient(135deg, #0284c7 0%, #2563eb 100%)",
+            width: "36px",
+            height: "36px",
+            borderRadius: "8px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "20px",
-            boxShadow: "0 0 12px rgba(59, 130, 246, 0.5)",
+            fontSize: "18px",
+            boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)",
+            color: "#ffffff",
           }}
         >
           🛡️
         </div>
         <div>
-          <div style={{ fontSize: "17px", fontWeight: "800", letterSpacing: "0.5px" }}>
+          <div style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", letterSpacing: "-0.2px" }}>
             AI Disaster Risk Assessment & Relocation Platform
           </div>
-          <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "500" }}>
+          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500" }}>
             SIH26191 • Real-Time Spatial Optimization & Multi-Hazard AI Diagnostics
           </div>
         </div>
       </div>
 
       {/* SYSTEM STATUS PILLS */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            background: "rgba(16, 185, 129, 0.15)",
-            border: "1px solid rgba(16, 185, 129, 0.3)",
+            gap: "5px",
+            background: "#f0fdf4",
+            border: "1px solid #bbf7d0",
             padding: "4px 10px",
             borderRadius: "20px",
-            fontSize: "11.5px",
-            color: "#34d399",
+            fontSize: "11px",
+            color: "#166534",
             fontWeight: "600",
           }}
         >
-          <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 6px #10b981" }} />
+          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
           ML Engine v2 (Hungarian + Groq)
         </div>
 
@@ -64,17 +65,17 @@ const Header = () => {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            background: "rgba(59, 130, 246, 0.15)",
-            border: "1px solid rgba(59, 130, 246, 0.3)",
+            gap: "5px",
+            background: "#f0f9ff",
+            border: "1px solid #bae6fd",
             padding: "4px 10px",
             borderRadius: "20px",
-            fontSize: "11.5px",
-            color: "#60a5fa",
+            fontSize: "11px",
+            color: "#0369a1",
             fontWeight: "600",
           }}
         >
-          <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#3b82f6" }} />
+          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0284c7" }} />
           PostGIS 71 Habitations
         </div>
 
@@ -82,17 +83,17 @@ const Header = () => {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            background: "rgba(239, 68, 68, 0.15)",
-            border: "1px solid rgba(239, 68, 68, 0.3)",
+            gap: "5px",
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
             padding: "4px 10px",
             borderRadius: "20px",
-            fontSize: "11.5px",
-            color: "#f87171",
+            fontSize: "11px",
+            color: "#991b1b",
             fontWeight: "600",
           }}
         >
-          <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#ef4444", boxShadow: "0 0 6px #ef4444" }} />
+          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#dc2626" }} />
           17 Critical Zones
         </div>
       </div>

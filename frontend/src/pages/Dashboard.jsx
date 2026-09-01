@@ -96,43 +96,40 @@ const Dashboard = () => {
           <div
             style={{
               position: "absolute",
-              top: "15px",
-              left: "60px",
+              top: "12px",
+              left: "55px",
               zIndex: 1000,
               display: "flex",
-              gap: "10px",
+              gap: "8px",
               alignItems: "center",
             }}
           >
-            <div style={{ width: "260px" }}>
-              <SearchBar
-                villages={filteredVillages}
-                onSelectVillage={(v) => {
-                  setSelectedVillage(v);
-                  if (v && v.lat && v.lng) {
-                    setFocusLocation({ lat: v.lat, lng: v.lng });
-                  }
-                }}
-              />
-            </div>
+            <SearchBar
+              villages={filteredVillages}
+              onSelectVillage={(v) => {
+                setSelectedVillage(v);
+                if (v && v.lat && v.lng) {
+                  setFocusLocation({ lat: v.lat, lng: v.lng });
+                }
+              }}
+            />
 
             {/* ISOLATIONFOREST ANOMALY FILTER BUTTON */}
             <button
               onClick={() => setShowAnomaliesOnly(!showAnomaliesOnly)}
               style={{
-                background: showAnomaliesOnly ? "#dc2626" : "rgba(15, 23, 42, 0.85)",
-                color: "white",
-                border: showAnomaliesOnly ? "2px solid #fecaca" : "1px solid rgba(255,255,255,0.2)",
-                backdropFilter: "blur(8px)",
-                padding: "8px 12px",
+                background: showAnomaliesOnly ? "#dc2626" : "#ffffff",
+                color: showAnomaliesOnly ? "#ffffff" : "#b45309",
+                border: showAnomaliesOnly ? "1px solid #b91c1c" : "1px solid #fde68a",
+                padding: "6px 10px",
                 borderRadius: "8px",
-                fontSize: "12px",
+                fontSize: "11.5px",
                 fontWeight: "700",
                 cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "5px",
               }}
             >
               <span>⚠️</span>

@@ -89,15 +89,15 @@ const VillageMarkers = ({ villages, selectedVillage, onSelectVillage }) => {
           }}
         >
           <Popup>
-            <div style={{ minWidth: "180px", fontFamily: "system-ui, sans-serif" }}>
-              <div style={{ fontWeight: "700", fontSize: "14px", color: "#0f172a", marginBottom: "4px" }}>
+            <div style={{ minWidth: "190px", fontFamily: "system-ui, sans-serif" }}>
+              <div style={{ fontWeight: "700", fontSize: "14px", color: "#0f172a", marginBottom: "2px" }}>
                 {village.name}
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
+              <div style={{ fontSize: "11.5px", color: "#64748b", marginBottom: "6px" }}>
                 📍 {village.district}, {village.state}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", fontSize: "11.5px", marginBottom: "8px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", fontSize: "11px", marginBottom: "6px" }}>
                 <div>Risk: <strong style={{ color: riskColors[village.riskLevel] || "#64748b" }}>{village.riskLevel}</strong></div>
                 <div>Priority: <strong>{village.priority}</strong></div>
                 <div>Pop: <strong>{village.population?.toLocaleString()}</strong></div>
@@ -105,28 +105,45 @@ const VillageMarkers = ({ villages, selectedVillage, onSelectVillage }) => {
               </div>
 
               {village.dominantFactor && (
-                <div style={{ fontSize: "11px", background: "#f1f5f9", padding: "4px 6px", borderRadius: "4px", color: "#334155" }}>
+                <div style={{ fontSize: "10.5px", background: "#f1f5f9", padding: "3px 6px", borderRadius: "4px", color: "#334155", marginBottom: "6px" }}>
                   Driver: <strong>{village.dominantFactor}</strong>
                 </div>
               )}
 
-              <button
-                onClick={() => onSelectVillage && onSelectVillage(village)}
-                style={{
-                  marginTop: "8px",
-                  width: "100%",
-                  padding: "5px",
-                  background: "#2563eb",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                }}
-              >
-                View AI Reasoning & Route →
-              </button>
+              <div style={{ display: "flex", gap: "4px" }}>
+                <button
+                  onClick={() => onSelectVillage && onSelectVillage(village)}
+                  style={{
+                    flex: 1,
+                    padding: "5px",
+                    background: "#2563eb",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "10.5px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  AI Route →
+                </button>
+                <button
+                  onClick={() => onSelectVillage && onSelectVillage({ ...village, openWeather: true })}
+                  style={{
+                    flex: 1,
+                    padding: "5px",
+                    background: "#0284c7",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "10.5px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  ⛅ Weather
+                </button>
+              </div>
             </div>
           </Popup>
         </Marker>

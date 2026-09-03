@@ -2,7 +2,7 @@ import { villages as fallbackVillages } from "../utils/villages";
 import { hazards as fallbackHazards } from "../utils/hazards";
 import { relocationSites as fallbackSites } from "../utils/relocationSites";
 
-const BACKEND_URL = "http://localhost:8080/api";
+const BACKEND_URL = "http://localhost:8080";
 const ML_URL = "http://localhost:8001/api";
 
 /**

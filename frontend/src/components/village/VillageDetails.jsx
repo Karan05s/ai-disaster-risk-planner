@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { relocationSites } from "../../utils/relocationSites";
 import { hazards } from "../../utils/hazards";
-import { evaluateLiveDynamicRisk } from "../../services/riskFusionService";
+import { evaluateLiveDynamicRisk, detectWaterOrUnidentifiedTerrainAsync } from "../../services/riskFusionService";
 import { fetchRealtimeWeather } from "../../services/weatherService";
 import WeatherReport from "../weather/WeatherReport";
 
@@ -11,6 +11,7 @@ const riskLevelColors = {
   MEDIUM: { bg: "#fefce8", border: "#fde047", text: "#854d0e", badge: "#ca8a04" },
   LOW: { bg: "#f0fdf4", border: "#86efac", text: "#166534", badge: "#16a34a" },
   SAFE: { bg: "#f0fdf4", border: "#86efac", text: "#166534", badge: "#16a34a" },
+  CANNOT_DETERMINE: { bg: "#f8fafc", border: "#cbd5e1", text: "#475569", badge: "#64748b" },
 };
 
 const VillageDetails = ({
@@ -20,14 +21,17 @@ const VillageDetails = ({
 }) => {
   const [activeTab, setActiveTab] = useState("AI_RISK"); // "AI_RISK" | "SHELTERS" | "WEATHER"
   const [liveWeather, setLiveWeather] = useState(null);
+  const [waterCheckResult, setWaterCheckResult] = useState(null);
   const [decisionState, setDecisionState] = useState(null); // 'APPROVED' | 'OVERRIDDEN'
   const [overrideReason, setOverrideReason] = useState("");
   const [showOverrideInput, setShowOverrideInput] = useState(false);
 
-  // Automatically fetch live weather whenever selected village/pin changes
+  // Automatically fetch live weather and check waterbody terrain on pin change
   useEffect(() => {
     if (village && village.lat && village.lng) {
       let isMounted = true;
+
+      // 1. Fetch live weather
       fetchRealtimeWeather(village.lat, village.lng)
         .then((data) => {
           if (isMounted) setLiveWeather(data);
@@ -36,9 +40,15 @@ const VillageDetails = ({
           if (isMounted) setLiveWeather(null);
         });
 
+      // 2. Check if coordinate is over river, sea, lake or uninhabited water surface
+      detectWaterOrUnidentifiedTerrainAsync(village.lat, village.lng).then((res) => {
+        if (isMounted) setWaterCheckResult(res);
+      });
+
       if (village.openWeather || village.isCustomLocation) {
         setActiveTab("AI_RISK");
       }
+
       return () => {
         isMounted = false;
       };
@@ -86,10 +96,12 @@ const VillageDetails = ({
     weatherData: liveWeather,
     hazardsList: hazards,
     relocationSitesList: relocationSites,
+    isWaterBodyDetected: waterCheckResult,
   });
 
-  const { dynamicRisk, baseline, atmospheric, nearbyShelters, recommendedShelter } = fusionReport;
+  const { dynamicRisk, baseline, atmospheric, nearbyShelters, recommendedShelter, isWaterTerrain, waterType } = fusionReport;
   const riskTheme = riskLevelColors[dynamicRisk.level] || riskLevelColors.SAFE;
+  const isCannotDetermine = dynamicRisk.level === "CANNOT_DETERMINE";
 
   // Approximate factor percentages for XAI breakdown
   const hazardPts = (village.hazardIntensity || 0.8) * 50;
@@ -137,11 +149,11 @@ const VillageDetails = ({
       <div style={{ paddingRight: "30px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <h2 style={{ margin: "0", color: "#0f172a", fontSize: "16px", fontWeight: "700" }}>
-            {isShelter ? "🏠 " : isCustomPin ? "📍 " : ""}{village.name}
+            {isCannotDetermine ? "🌊 " : isShelter ? "🏠 " : isCustomPin ? "📍 " : ""}{village.name}
           </h2>
         </div>
         <p style={{ margin: "2px 0 8px 0", color: "#64748b", fontSize: "12px" }}>
-          📍 {village.district ? `${village.district}, ` : ""}{village.state || "India"} • {village.lat?.toFixed(3)}°N, {village.lng?.toFixed(3)}°E
+          📍 {isCannotDetermine ? `${waterType || "Water Body"} • ` : ""}{village.district ? `${village.district}, ` : ""}{village.state || "India"} • {village.lat?.toFixed(3)}°N, {village.lng?.toFixed(3)}°E
           {village.id && !isCustomPin && (
             <> • ID: <code style={{ fontSize: "11px", background: "#f1f5f9", padding: "1px 4px", borderRadius: "3px" }}>{village.id}</code></>
           )}
@@ -166,8 +178,8 @@ const VillageDetails = ({
             <div style={{ fontSize: "10px", color: riskTheme.text, fontWeight: "700", textTransform: "uppercase" }}>
               LIVE DYNAMIC RISK INDEX
             </div>
-            <div style={{ fontSize: "15px", fontWeight: "800", color: riskTheme.badge }}>
-              {dynamicRisk.level} ({dynamicRisk.score}/100)
+            <div style={{ fontSize: isCannotDetermine ? "13px" : "15px", fontWeight: "800", color: riskTheme.badge }}>
+              {isCannotDetermine ? "CANNOT DETERMINE (WATER / UNINHABITED)" : `${dynamicRisk.level} (${dynamicRisk.score}/100)`}
             </div>
           </div>
 
@@ -270,16 +282,16 @@ const VillageDetails = ({
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", fontSize: "11px" }}>
               <div style={{ background: "#ffffff", padding: "6px 8px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                <span style={{ color: "#64748b" }}>Baseline Hazard:</span>
-                <div style={{ fontWeight: "700", color: "#0f172a", marginTop: "1px" }}>
-                  {baseline.riskLevel} {baseline.hazardType !== "None" ? `(${baseline.hazardType})` : "(No Prior Record)"}
+                <span style={{ color: "#64748b" }}>Terrain / Baseline:</span>
+                <div style={{ fontWeight: "700", color: isCannotDetermine ? "#64748b" : "#0f172a", marginTop: "1px" }}>
+                  {isCannotDetermine ? `N/A (${waterType || "Water Body"})` : `${baseline.riskLevel} ${baseline.hazardType !== "None" ? `(${baseline.hazardType})` : "(No Prior Record)"}`}
                 </div>
               </div>
 
               <div style={{ background: "#ffffff", padding: "6px 8px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                <span style={{ color: "#64748b" }}>Atmospheric Threat:</span>
+                <span style={{ color: "#64748b" }}>Atmospheric Telemetry:</span>
                 <div style={{ fontWeight: "700", color: atmospheric.threatLevel === "CRITICAL" ? "#dc2626" : (atmospheric.threatLevel === "HIGH" ? "#ea580c" : "#16a34a"), marginTop: "1px" }}>
-                  {atmospheric.threatLevel} ({liveWeather?.current?.precipitation || 0} mm/h rain)
+                  {liveWeather?.current ? `${liveWeather.current.temperature}°C, ${liveWeather.current.precipitation} mm/h` : "Live telemetry"}
                 </div>
               </div>
             </div>
@@ -294,24 +306,24 @@ const VillageDetails = ({
             style={{
               marginBottom: "10px",
               padding: "10px",
-              background: "#faf5ff",
-              border: "1px solid #e9d5ff",
+              background: isCannotDetermine ? "#f8fafc" : "#faf5ff",
+              border: isCannotDetermine ? "1px solid #cbd5e1" : "1px solid #e9d5ff",
               borderRadius: "8px",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px" }}>
-              <span>🧠</span>
-              <span style={{ fontSize: "11px", color: "#7e22ce", fontWeight: "700" }}>
-                AI Disaster Risk Diagnostic Rationale
+              <span>{isCannotDetermine ? "🌊" : "🧠"}</span>
+              <span style={{ fontSize: "11px", color: isCannotDetermine ? "#475569" : "#7e22ce", fontWeight: "700" }}>
+                {isCannotDetermine ? "Terrain Diagnostic Notice" : "AI Disaster Risk Diagnostic Rationale"}
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: "11px", color: "#3b0764", lineHeight: "1.45" }}>
+            <p style={{ margin: 0, fontSize: "11px", color: isCannotDetermine ? "#334155" : "#3b0764", lineHeight: "1.45" }}>
               {dynamicRisk.explainableReason}
             </p>
           </div>
 
-          {/* XAI FACTOR CONTRIBUTION GAUGES */}
-          {!isShelter && !isCustomPin && (
+          {/* XAI FACTOR CONTRIBUTION GAUGES (FOR TERRESTRIAL HABITATIONS) */}
+          {!isShelter && !isCustomPin && !isCannotDetermine && (
             <div
               style={{
                 marginBottom: "10px",
@@ -378,7 +390,7 @@ const VillageDetails = ({
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
                 <span style={{ fontSize: "11px", color: "#166534", fontWeight: "700" }}>
-                  🏠 Primary Safe Relief Shelter
+                  🏠 Nearest Terrestrial Safe Shelter
                 </span>
                 <span style={{ fontSize: "10px", color: "#15803d", background: "#dcfce7", padding: "1px 5px", borderRadius: "6px", fontWeight: "700" }}>
                   {recommendedShelter.distance} km {recommendedShelter.direction}
@@ -411,8 +423,8 @@ const VillageDetails = ({
             </div>
           )}
 
-          {/* AUTHORITY ACTIONS */}
-          {!isShelter && !isCustomPin && (
+          {/* AUTHORITY ACTIONS (ONLY FOR TERRESTRIAL HABITATIONS) */}
+          {!isShelter && !isCustomPin && !isCannotDetermine && (
             <div
               style={{
                 padding: "8px 10px",
@@ -518,7 +530,7 @@ const VillageDetails = ({
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
             <span style={{ fontSize: "11.5px", fontWeight: "700", color: "#0f172a" }}>
-              🏠 Safe Shelters Ranked by Proximity
+              🏠 Terrestrial Shelters Ranked by Proximity
             </span>
             <span style={{ fontSize: "10.5px", color: "#16a34a", fontWeight: "600" }}>
               {nearbyShelters.length} Available

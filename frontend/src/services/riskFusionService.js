@@ -5,14 +5,223 @@
  * with Real-Time Atmospheric Telemetry (Precipitation rate, 12h forecast accumulation,
  * WMO severe weather codes, wind gusts, atmospheric pressure) to dynamically compute:
  * 
- * 1. Live Dynamic Risk Tier (SAFE, LOW, MEDIUM, HIGH, CRITICAL)
- * 2. Transparent Explainable Rationale (Baseline vs Live Weather Fusion)
- * 3. Proximity-Ranked Safe Shelters & Relocation Colonies
- * 4. District-Level Live Disaster Assessment Reports
+ * 1. Live Dynamic Risk Tier (SAFE, LOW, MEDIUM, HIGH, CRITICAL, CANNOT_DETERMINE)
+ * 2. Water / River / Sea / Uninhabited Terrain Detection (Cannot Determine)
+ * 3. Transparent Explainable Rationale (Baseline vs Live Weather Fusion)
+ * 4. Proximity-Ranked Safe Shelters & Relocation Colonies
+ * 5. District-Level Live Disaster Assessment Reports
  */
 
 import { relocationSites as defaultShelters } from "../utils/relocationSites";
 import { calculateDistance } from "../utils/mapHelpers";
+
+// Memory cache for water/terrain reverse geocoding lookups
+const terrainCache = new Map();
+
+/**
+ * Fast synchronous geometric & oceanic waterbody detector
+ */
+export function isWaterOrUninhabitedTerrain(lat, lng, metadata = {}) {
+  if (!lat || !lng) return false;
+
+  // Check if already flagged in metadata
+  if (metadata.isWaterBody || metadata.isWater || metadata.terrainType === "WATER" || metadata.category === "water") {
+    return {
+      isWater: true,
+      type: metadata.waterType || "River / Water Body",
+      name: metadata.waterName || "Water Surface",
+    };
+  }
+
+  // A. Offshore / Ocean / Sea bounding checks around India
+  // Arabian Sea offshore:
+  if (lat < 22.5 && lat >= 8.0 && lng < 72.4) {
+    return {
+      isWater: true,
+      type: "Sea / Ocean",
+      name: "Arabian Sea Offshore Surface",
+    };
+  }
+  // Bay of Bengal offshore:
+  if (lat < 21.5 && lat >= 8.0 && lng > 86.8) {
+    return {
+      isWater: true,
+      type: "Sea / Ocean",
+      name: "Bay of Bengal Offshore Surface",
+    };
+  }
+  if (lat < 16.0 && lat >= 8.0 && lng > 82.2) {
+    return {
+      isWater: true,
+      type: "Sea / Ocean",
+      name: "Bay of Bengal Offshore Surface",
+    };
+  }
+  // Deep Indian Ocean south of peninsular India:
+  if (lat < 7.9) {
+    return {
+      isWater: true,
+      type: "Ocean",
+      name: "Indian Ocean Open Waters",
+    };
+  }
+
+  // B. Major braided river beds & lakes across India
+  // Koshi River broad active braided channel bed in Bihar:
+  // e.g. 26.081°N, 86.484°E (Koshi river main channel in Supaul/Madhepura)
+  if (lat >= 25.75 && lat <= 26.75 && lng >= 86.40 && lng <= 86.58) {
+    return {
+      isWater: true,
+      type: "River / Floodplain Waterbed",
+      name: "River Koshi Active Channel",
+    };
+  }
+
+  // Brahmaputra River central stream in Assam:
+  if (lat >= 26.14 && lat <= 26.25 && lng >= 91.65 && lng <= 91.85) {
+    return {
+      isWater: true,
+      type: "River Channel",
+      name: "River Brahmaputra Stream",
+    };
+  }
+
+  // Chilika Lake:
+  if (lat >= 19.50 && lat <= 19.90 && lng >= 85.10 && lng <= 85.60) {
+    return {
+      isWater: true,
+      type: "Lake / Lagoon",
+      name: "Chilika Lake Waters",
+    };
+  }
+
+  // Vembanad Lake:
+  if (lat >= 9.50 && lat <= 9.95 && lng >= 76.32 && lng <= 76.45) {
+    return {
+      isWater: true,
+      type: "Lake / Backwaters",
+      name: "Vembanad Lake Backwaters",
+    };
+  }
+
+  return false;
+}
+
+/**
+ * Asynchronously inspects OpenStreetMap Nominatim reverse geocode to detect rivers/waterbodies/unidentified terrain
+ */
+export async function detectWaterOrUnidentifiedTerrainAsync(lat, lng) {
+  if (!lat || !lng) return false;
+  const key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+  if (terrainCache.has(key)) {
+    return terrainCache.get(key);
+  }
+
+  // First check fast local bounding
+  const fastCheck = isWaterOrUninhabitedTerrain(lat, lng);
+  if (fastCheck) {
+    terrainCache.set(key, fastCheck);
+    return fastCheck;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=16`,
+      {
+        signal: controller.signal,
+        headers: { "Accept-Language": "en" },
+      }
+    );
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.error) {
+        const result = {
+          isWater: true,
+          type: "Unidentified Terrain",
+          name: "Unidentified Non-Settlement Coordinate",
+        };
+        terrainCache.set(key, result);
+        return result;
+      }
+
+      const category = (data.category || data.class || "").toLowerCase();
+      const type = (data.type || "").toLowerCase();
+      const displayName = (data.display_name || "").toLowerCase();
+      const address = data.address || {};
+
+      const isWaterCategory =
+        ["water", "waterway", "natural", "wetland"].includes(category) &&
+        [
+          "water", "river", "riverbank", "stream", "canal", "lake",
+          "reservoir", "bay", "sea", "ocean", "wetland", "drain"
+        ].includes(type);
+
+      const isWaterName =
+        displayName.includes("river") ||
+        displayName.includes("koshi") ||
+        displayName.includes("ganga") ||
+        displayName.includes("brahmaputra") ||
+        displayName.includes("lake") ||
+        displayName.includes("reservoir") ||
+        displayName.includes("sea") ||
+        displayName.includes("bay of bengal") ||
+        displayName.includes("arabian sea") ||
+        displayName.includes("water body") ||
+        displayName.includes("dam") ||
+        displayName.includes("canal") ||
+        displayName.includes("wetland");
+
+      const hasNoHabitation =
+        !address.village &&
+        !address.town &&
+        !address.city &&
+        !address.suburb &&
+        !address.hamlet &&
+        !address.neighbourhood &&
+        !address.residential &&
+        !address.road;
+
+      if (isWaterCategory || isWaterName || category === "waterway") {
+        let waterTypeName = "River / Water Body";
+        if (displayName.includes("koshi")) waterTypeName = "River Koshi Channel";
+        else if (displayName.includes("ganga")) waterTypeName = "River Ganga Channel";
+        else if (displayName.includes("brahmaputra")) waterTypeName = "River Brahmaputra Channel";
+        else if (type === "river" || type === "riverbank" || category === "waterway") waterTypeName = "River / Waterway Channel";
+        else if (type === "lake" || type === "reservoir") waterTypeName = "Lake / Reservoir";
+        else if (type === "sea" || type === "ocean" || type === "bay") waterTypeName = "Sea / Ocean Water Surface";
+
+        const result = {
+          isWater: true,
+          type: waterTypeName,
+          name: data.name || waterTypeName,
+          displayName: data.display_name,
+        };
+        terrainCache.set(key, result);
+        return result;
+      }
+
+      // Valid terrestrial location
+      const result = {
+        isWater: false,
+        name: data.name || address.village || address.town || address.city,
+        district: address.state_district || address.county || address.district,
+        state: address.state,
+      };
+      terrainCache.set(key, result);
+      return result;
+    }
+  } catch {
+    // Network fallback
+  }
+
+  terrainCache.set(key, false);
+  return false;
+}
 
 /**
  * Calculates compass direction bearing from point 1 to point 2
@@ -77,7 +286,61 @@ export function evaluateLiveDynamicRisk({
   weatherData = null,
   hazardsList = [],
   relocationSitesList = defaultShelters,
+  isWaterBodyDetected = null,
 }) {
+  // =========================================================================
+  // 0. CHECK WATER / RIVER / SEA / UNIDENTIFIED LOCATION OVERRIDE
+  // =========================================================================
+  const waterCheck =
+    isWaterBodyDetected !== null
+      ? isWaterBodyDetected
+      : isWaterOrUninhabitedTerrain(lat, lng, { locationName });
+
+  const isWater = waterCheck && (waterCheck.isWater || waterCheck === true);
+  const waterType = (waterCheck && waterCheck.type) || "River / Water Surface";
+
+  // If pointer is on water, river, sea, or unidentified non-habitable terrain:
+  if (isWater) {
+    const nearbyShelters = findNearbySafeShelters(lat, lng, relocationSitesList, 5, 0);
+    const weatherCurrent = weatherData?.current;
+
+    return {
+      locationName: waterCheck.name || locationName,
+      district: district || "Water Surface",
+      state,
+      coordinates: { lat, lng },
+      population: 0,
+      isWaterTerrain: true,
+      waterType,
+      baseline: {
+        riskLevel: "N/A",
+        riskScore: null,
+        hazardType: "Water Body / River Channel",
+        insideHazardPolygon: false,
+        nearestHazardDistanceKm: null,
+        reason: `Pointer located directly over water / non-habitable terrain (${waterType}).`,
+      },
+      atmospheric: {
+        threatLevel: "OBSERVED",
+        threatScore: 0,
+        factors: weatherCurrent
+          ? [`Observed: ${weatherCurrent.temperature}°C, ${weatherCurrent.precipitation} mm/h rain`]
+          : ["Nominal atmospheric observations"],
+        currentWeather: weatherCurrent,
+      },
+      dynamicRisk: {
+        score: null,
+        level: "CANNOT_DETERMINE",
+        statusBadge: "⚪ CANNOT DETERMINE (WATER / UNINHABITED)",
+        actionPriority: "N/A",
+        alertSummary: "Pointer is positioned over a riverbed, water body, or unidentified non-settlement terrain. Habitation risk cannot be determined for aquatic surfaces.",
+        explainableReason: `The selected coordinate (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E) is situated over a water body / river channel (${waterType}). AI disaster risk scoring and habitation vulnerability indices are reserved for terrestrial settlements. For emergency reference, nearest terrestrial safe shelters are listed below.`,
+      },
+      nearbyShelters,
+      recommendedShelter: nearbyShelters[0] || null,
+    };
+  }
+
   // =========================================================================
   // 1. BASELINE GEOSPATIAL & HISTORICAL VULNERABILITY SCORE (0 to 100)
   // =========================================================================
@@ -88,7 +351,6 @@ export function evaluateLiveDynamicRisk({
   let insideHazardPolygon = false;
   let nearestHazardDistance = 999;
 
-  // Map known baseline levels
   if (baselineRiskLevel) {
     const map = { CRITICAL: 85, HIGH: 70, MEDIUM: 50, LOW: 25, SAFE: 10 };
     baseScore = baselineRiskScore || map[baselineRiskLevel] || 35;
@@ -99,7 +361,6 @@ export function evaluateLiveDynamicRisk({
   if (lat && lng && hazardsList && hazardsList.length > 0) {
     hazardsList.forEach((h) => {
       if (h.coordinates && h.coordinates.length > 0) {
-        // Compute centroid
         const avgLat = h.coordinates.reduce((acc, c) => acc + c[0], 0) / h.coordinates.length;
         const avgLng = h.coordinates.reduce((acc, c) => acc + c[1], 0) / h.coordinates.length;
         const d = calculateDistance(lat, lng, avgLat, avgLng);
@@ -195,7 +456,6 @@ export function evaluateLiveDynamicRisk({
       weatherFactors.push(`Deep low-pressure cyclonic disturbance (${pressure} hPa)`);
     }
 
-    // Atmospheric Tier Assignment
     if (atmosphericScore >= 70) atmosphericLevel = "CRITICAL";
     else if (atmosphericScore >= 45) atmosphericLevel = "HIGH";
     else if (atmosphericScore >= 25) atmosphericLevel = "MEDIUM";
@@ -208,15 +468,12 @@ export function evaluateLiveDynamicRisk({
   // =========================================================================
   // 3. FUSED LIVE DYNAMIC RISK SCORE & TIER DETERMINATION
   // =========================================================================
-  // Live Weather is weighted dynamically: severe storms elevate any peaceful baseline!
   let fusedScore = 0;
   let fusedRiskLevel = "SAFE";
   let statusBadge = "🟢 SAFE";
   let alertSummary = "";
   let actionPriority = "NORMAL";
 
-  // If live atmospheric threat is CRITICAL (Flash flood / severe cloudburst),
-  // promote risk to CRITICAL/HIGH even if zero previous disaster records existed!
   if (atmosphericLevel === "CRITICAL") {
     fusedScore = Math.max(85, Math.round(baseScore * 0.3 + atmosphericScore * 0.7));
     fusedRiskLevel = "CRITICAL";
@@ -230,7 +487,6 @@ export function evaluateLiveDynamicRisk({
     actionPriority = "HIGH";
     alertSummary = `Elevated Atmospheric Vulnerability. High rainfall/wind gusts observed. Relief shelters placed on standby.`;
   } else if (baseLevel === "CRITICAL" && atmosphericLevel === "SAFE") {
-    // High historical vulnerability, but calm weather today
     fusedScore = Math.round(baseScore * 0.65 + atmosphericScore * 0.35);
     fusedRiskLevel = fusedScore > 65 ? "HIGH" : "MEDIUM";
     statusBadge = "🟡 MONITORED (CALM WEATHER)";
@@ -262,17 +518,10 @@ export function evaluateLiveDynamicRisk({
     alertSummary = `All parameters safe. No active disaster hazards or adverse weather detected.`;
   }
 
-  // Cap scores between 0 - 100
   fusedScore = Math.min(100, Math.max(5, fusedScore));
 
-  // =========================================================================
-  // 4. FIND CLOSEST SAFE SHELTERS FOR THIS LOCATION
-  // =========================================================================
   const nearbyShelters = findNearbySafeShelters(lat, lng, relocationSitesList, 5, 0);
 
-  // =========================================================================
-  // 5. GENERATE EXPLAINABLE AI REASONING TEXT
-  // =========================================================================
   let explainableReason = "";
   if (baseLevel === "SAFE" && (atmosphericLevel === "CRITICAL" || atmosphericLevel === "HIGH")) {
     explainableReason = `Even though ${locationName} (${district}) has no prior historical disaster events in the registry, current live weather telemetry records ${weatherFactors.join(", ")}, escalating the real-time threat index to ${fusedRiskLevel}. Nearest safe shelter ${nearbyShelters[0]?.name || "Facility"} is situated ${nearbyShelters[0]?.distance || "N/A"} km away.`;
@@ -290,7 +539,7 @@ export function evaluateLiveDynamicRisk({
     state,
     coordinates: { lat, lng },
     population,
-    // Baseline metrics
+    isWaterTerrain: false,
     baseline: {
       riskLevel: baseLevel,
       riskScore: baseScore,
@@ -299,14 +548,12 @@ export function evaluateLiveDynamicRisk({
       nearestHazardDistanceKm: nearestHazardDistance < 999 ? Math.round(nearestHazardDistance * 10) / 10 : null,
       reason: hazardReason,
     },
-    // Atmospheric metrics
     atmospheric: {
       threatLevel: atmosphericLevel,
       threatScore: atmosphericScore,
       factors: weatherFactors,
       currentWeather: weatherData?.current || null,
     },
-    // Fused dynamic result
     dynamicRisk: {
       score: fusedScore,
       level: fusedRiskLevel,
@@ -315,7 +562,6 @@ export function evaluateLiveDynamicRisk({
       alertSummary,
       explainableReason,
     },
-    // Safe shelters
     nearbyShelters,
     recommendedShelter: nearbyShelters[0] || null,
   };
@@ -333,12 +579,9 @@ export function getDistrictLiveReport({
 }) {
   if (!districtName || districtName === "ALL") return null;
 
-  // Filter habitations belonging to district
   const districtVillages = villagesList.filter(
     (v) => v.district && v.district.toLowerCase() === districtName.toLowerCase()
   );
-
-  // Filter shelters belonging to district
   const districtShelters = relocationSitesList.filter(
     (s) => s.district && s.district.toLowerCase() === districtName.toLowerCase()
   );
@@ -347,7 +590,6 @@ export function getDistrictLiveReport({
   const totalCapacity = districtShelters.reduce((acc, s) => acc + (s.capacity || s.capacityTotal || 0), 0);
   const availableCapacity = districtShelters.reduce((acc, s) => acc + (s.availableCapacity || s.capacity || 0), 0);
 
-  // Determine centroid coordinates for weather lookup if not provided
   let centerLat = 26.14;
   let centerLng = 91.73;
 
@@ -359,10 +601,8 @@ export function getDistrictLiveReport({
     centerLng = districtShelters.reduce((acc, s) => acc + s.lng, 0) / districtShelters.length;
   }
 
-  // State
   const state = districtVillages[0]?.state || districtShelters[0]?.state || "India";
 
-  // Check baseline risk of villages in district
   const hasCriticalVillages = districtVillages.some((v) => v.riskLevel === "CRITICAL");
   const hasHighVillages = districtVillages.some((v) => v.riskLevel === "HIGH");
 
@@ -371,7 +611,6 @@ export function getDistrictLiveReport({
   else if (hasHighVillages) baseDistrictLevel = "HIGH";
   else if (districtVillages.length > 0) baseDistrictLevel = "MEDIUM";
 
-  // Evaluate Live Risk for the District
   const assessment = evaluateLiveDynamicRisk({
     lat: centerLat,
     lng: centerLng,

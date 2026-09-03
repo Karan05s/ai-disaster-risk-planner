@@ -16,6 +16,8 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 
+import { isWaterOrUninhabitedTerrain } from "../../services/riskFusionService";
+
 const INDIA_BOUNDS = [
   [6.5, 68.0],
   [37.5, 97.5],
@@ -69,7 +71,7 @@ const customPinIcon = L.divIcon({
       <div style="
         transform: rotate(45deg);
         font-size: 14px;
-      ">⛅</div>
+      ">📍</div>
     </div>
   `,
   iconSize: [32, 32],
@@ -91,15 +93,18 @@ const MapView = ({
   const [customPin, setCustomPin] = useState(null);
 
   const handleMapClick = (latlng) => {
+    const fastWater = isWaterOrUninhabitedTerrain(latlng.lat, latlng.lng);
     const newLocation = {
       id: `CUSTOM-${Date.now().toString().slice(-4)}`,
-      name: `Pin (${latlng.lat.toFixed(3)}°N, ${latlng.lng.toFixed(3)}°E)`,
-      district: "Custom Location",
+      name: fastWater ? `${fastWater.name || "Water Body"} (${latlng.lat.toFixed(3)}°N, ${latlng.lng.toFixed(3)}°E)` : `Pin (${latlng.lat.toFixed(3)}°N, ${latlng.lng.toFixed(3)}°E)`,
+      district: fastWater ? (fastWater.type || "Water Surface") : "Custom Location",
       state: "India",
       lat: latlng.lat,
       lng: latlng.lng,
       isCustomLocation: true,
-      riskLevel: "MEDIUM",
+      isWaterTerrain: !!fastWater,
+      waterType: fastWater ? fastWater.type : null,
+      riskLevel: fastWater ? "CANNOT_DETERMINE" : "SAFE",
       priority: "ADVISORY",
     };
     setCustomPin(newLocation);

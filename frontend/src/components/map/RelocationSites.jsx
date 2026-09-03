@@ -1,41 +1,77 @@
-import { Marker, Popup } from "react-leaflet";
+import { useState } from "react";
+import { Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { relocationSites } from "../../utils/relocationSites";
 
-const relocationIcon = L.divIcon({
-  className: "",
+// ZOOMED-OUT MINIMAL GREEN DOT ICON (< 8 zoom)
+const greenDotIcon = L.divIcon({
+  className: "custom-shelter-dot",
+  html: `
+    <div style="
+      width: 9px;
+      height: 9px;
+      background: #16a34a;
+      border: 1.5px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 5px rgba(22, 163, 74, 0.75), 0 1px 3px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    "></div>
+  `,
+  iconSize: [9, 9],
+  iconAnchor: [4.5, 4.5],
+  popupAnchor: [0, -8],
+});
+
+// ZOOMED-IN DETAILED SHELTER ICON (>= 8 zoom)
+const fullShelterIcon = L.divIcon({
+  className: "custom-shelter-badge",
   html: `
     <div
       style="
-        width: 32px;
-        height: 32px;
-        background: rgba(22, 163, 74, 0.85);
-        border: 2px solid rgba(255, 255, 255, 0.95);
+        width: 30px;
+        height: 30px;
+        background: rgba(22, 163, 74, 0.90);
+        border: 2px solid #ffffff;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-        font-size: 16px;
+        font-size: 15px;
         cursor: pointer;
+        transition: transform 0.15s ease;
       "
     >
       🏠
     </div>
   `,
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-  popupAnchor: [0, -16],
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+  popupAnchor: [0, -15],
 });
 
 const RelocationSites = ({ onSelectSite }) => {
+  const map = useMap();
+  const [currentZoom, setCurrentZoom] = useState(map.getZoom());
+
+  // Listen for zoom changes
+  useMapEvents({
+    zoomend: () => {
+      setCurrentZoom(map.getZoom());
+    },
+  });
+
+  const isZoomedIn = currentZoom >= 8;
+  const activeIcon = isZoomedIn ? fullShelterIcon : greenDotIcon;
+
   return (
     <>
       {relocationSites.map((site) => (
         <Marker
           key={site.id}
           position={[site.lat, site.lng]}
-          icon={relocationIcon}
+          icon={activeIcon}
           eventHandlers={{
             click: () => {
               if (onSelectSite) {
@@ -51,10 +87,10 @@ const RelocationSites = ({ onSelectSite }) => {
         >
           <Popup>
             <div style={{ minWidth: "190px", fontFamily: "system-ui, sans-serif" }}>
-              <div style={{ fontWeight: "700", fontSize: "14px", color: "#166534", marginBottom: "4px" }}>
+              <div style={{ fontWeight: "700", fontSize: "13.5px", color: "#166534", marginBottom: "4px" }}>
                 🏠 {site.name}
               </div>
-              <div style={{ fontSize: "12px", color: "#475569", marginBottom: "6px" }}>
+              <div style={{ fontSize: "11.5px", color: "#475569", marginBottom: "6px" }}>
                 📍 {site.district}, {site.state || "Assam"}
               </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import MapView from "../components/map/MapContainer";
@@ -6,13 +6,21 @@ import MapView from "../components/map/MapContainer";
 import { villages as initialVillages } from "../utils/villages";
 import { hazards as initialHazards } from "../utils/hazards";
 import { relocationSites } from "../utils/relocationSites";
-import { getVillages, getHazardZones } from "../services/api";
+import { getVillages } from "../services/api";
+
+import {
+  fetchAllIndiaLiveTelemetry,
+  generateDynamicRealtimeHazards,
+  reevaluateVillagesWithLiveThreats,
+} from "../services/liveThreatService";
 
 import SearchBar from "../components/dashboard/SearchBar";
 import SummaryCards from "../components/dashboard/SummaryCards";
 import StatisticsPanel from "../components/dashboard/StatisticsPanel";
 import VillageDetails from "../components/village/VillageDetails";
 import DistrictLiveReportBanner from "../components/dashboard/DistrictLiveReportBanner";
+import LiveSyncControllerHUD from "../components/dashboard/LiveSyncControllerHUD";
+import AdminPanelModal from "../components/admin/AdminPanelModal";
 
 const Dashboard = () => {
   const [villagesList, setVillagesList] = useState(initialVillages);
@@ -25,20 +33,52 @@ const Dashboard = () => {
   const [selectedVillage, setSelectedVillage] = useState(null);
   const [focusLocation, setFocusLocation] = useState(null);
 
-  // Load live data from Backend & ML engine on mount
-  useEffect(() => {
-    async function loadData() {
-      const liveVillages = await getVillages();
-      if (liveVillages && liveVillages.length > 0) {
-        setVillagesList(liveVillages);
-      }
-      const liveHazards = await getHazardZones();
-      if (liveHazards && liveHazards.length > 0) {
-        setHazardsList(liveHazards);
-      }
+  // Live Telemetry 2-Hour Synchronization State
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Admin Command Panel Modal State
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+
+  // Core Real-Time Synchronization Routine
+  const syncLiveAllIndiaThreats = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      // 1. Fetch raw habitations
+      const rawVillages = (await getVillages()) || initialVillages;
+
+      // 2. Fetch live batch telemetry from Open-Meteo across all-India primary nodes
+      const telemetryMap = await fetchAllIndiaLiveTelemetry();
+
+      // 3. Dynamically generate active real-time hazard zones
+      const dynamicHazards = generateDynamicRealtimeHazards(telemetryMap);
+      setHazardsList(dynamicHazards);
+
+      // 4. Dynamically re-evaluate all villages with live atmospheric & hazard threats
+      const dynamicVillages = reevaluateVillagesWithLiveThreats(rawVillages, dynamicHazards);
+      setVillagesList(dynamicVillages);
+
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastSyncedAt(timestamp);
+    } catch (err) {
+      console.error("Live telemetry sync encountered an error:", err);
+    } finally {
+      setIsSyncing(false);
     }
-    loadData();
   }, []);
+
+  // Initial mount sync & 2-Hour Auto-Update Periodic Interval
+  useEffect(() => {
+    syncLiveAllIndiaThreats();
+
+    // 2-hour interval (2 * 60 * 60 * 1000 ms)
+    const twoHoursMs = 2 * 60 * 60 * 1000;
+    const interval = setInterval(() => {
+      syncLiveAllIndiaThreats();
+    }, twoHoursMs);
+
+    return () => clearInterval(interval);
+  }, [syncLiveAllIndiaThreats]);
 
   // When a district is selected, auto-center the map on that district
   useEffect(() => {
@@ -65,6 +105,8 @@ const Dashboard = () => {
 
   // Count flagged anomalies
   const anomalyCount = villagesList.filter((v) => v.isAnomaly).length;
+  const criticalCount = villagesList.filter((v) => v.riskLevel === "CRITICAL").length;
+  const immediateRelocationCount = villagesList.filter((v) => v.priority === "IMMEDIATE").length;
 
   // =====================================
   // FILTER VILLAGES
@@ -96,6 +138,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout
       villages={villagesList}
+      hazards={hazardsList}
       districtFilter={districtFilter}
       setDistrictFilter={setDistrictFilter}
       riskFilter={riskFilter}
@@ -104,6 +147,7 @@ const Dashboard = () => {
       setHazardFilter={setHazardFilter}
       priorityFilter={priorityFilter}
       setPriorityFilter={setPriorityFilter}
+      onOpenAdminPanel={() => setIsAdminModalOpen(true)}
     >
       <div
         style={{
@@ -116,6 +160,18 @@ const Dashboard = () => {
           boxSizing: "border-box",
         }}
       >
+        {/* LIVE 2-HOUR TELEMETRY SYNC STATUS BAR */}
+        <div style={{ flexShrink: 0 }}>
+          <LiveSyncControllerHUD
+            lastSyncedAt={lastSyncedAt}
+            isSyncing={isSyncing}
+            onForceSync={syncLiveAllIndiaThreats}
+            totalHazardsCount={hazardsList.length}
+            criticalVillagesCount={criticalCount}
+            immediateRelocationCount={immediateRelocationCount}
+          />
+        </div>
+
         {/* DISTRICT LIVE REPORT BANNER (WHEN DISTRICT FILTER ACTIVE) */}
         {districtFilter !== "ALL" && (
           <div style={{ flexShrink: 0 }}>
@@ -245,6 +301,24 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* ================================= */}
+      {/* ADMIN COMMAND PANEL MODAL */}
+      {/* ================================= */}
+      <AdminPanelModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        villages={villagesList}
+        hazards={hazardsList}
+        lastSyncedAt={lastSyncedAt}
+        onForceSync={syncLiveAllIndiaThreats}
+        onSelectVillageOnMap={(loc) => {
+          setSelectedVillage(loc);
+          if (loc.lat && loc.lng) {
+            setFocusLocation({ lat: loc.lat, lng: loc.lng });
+          }
+        }}
+      />
     </DashboardLayout>
   );
 };

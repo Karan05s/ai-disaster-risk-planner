@@ -1,4 +1,9 @@
-const Header = () => {
+const Header = ({
+  criticalCount = 14,
+  totalHabitations = 71,
+  totalHazards = 12,
+  onOpenAdminPanel,
+}) => {
   return (
     <header
       style={{
@@ -36,30 +41,49 @@ const Header = () => {
             AI Disaster Risk Assessment & Relocation Platform
           </div>
           <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500" }}>
-            SIH26191 • Real-Time Spatial Optimization & Multi-Hazard AI Diagnostics
+            SIH26191 • All-India Real-Time Threat Synthesis & Dynamic Spatial Optimization
           </div>
         </div>
       </div>
 
-      {/* SYSTEM STATUS PILLS */}
+      {/* SYSTEM STATUS PILLS & ADMIN BUTTON */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <div
+        {/* REPLACED BUTTON: ADMIN COMMAND PANEL */}
+        <button
+          onClick={onOpenAdminPanel}
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "5px",
-            background: "#f0fdf4",
-            border: "1px solid #bbf7d0",
-            padding: "4px 10px",
+            gap: "6px",
+            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+            border: "1px solid #334155",
+            padding: "5px 12px",
             borderRadius: "20px",
-            fontSize: "11px",
-            color: "#166534",
-            fontWeight: "600",
+            fontSize: "11.5px",
+            color: "#ffffff",
+            fontWeight: "700",
+            cursor: "pointer",
+            boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
+            transition: "all 0.15s ease",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#0f172a")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)")}
         >
-          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
-          ML Engine v2 (Hungarian + Groq)
-        </div>
+          <span style={{ fontSize: "13px" }}>🏛️</span>
+          <span>Admin Command Panel</span>
+          <span
+            style={{
+              fontSize: "9px",
+              background: "#ef4444",
+              color: "#ffffff",
+              padding: "1px 5px",
+              borderRadius: "8px",
+              fontWeight: "800",
+            }}
+          >
+            LIVE
+          </span>
+        </button>
 
         <div
           style={{
@@ -76,7 +100,7 @@ const Header = () => {
           }}
         >
           <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0284c7" }} />
-          PostGIS 71 Habitations
+          {totalHabitations} Habitations Monitored
         </div>
 
         <div
@@ -94,7 +118,7 @@ const Header = () => {
           }}
         >
           <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#dc2626" }} />
-          17 Critical Zones
+          {criticalCount} Critical Zones
         </div>
       </div>
     </header>

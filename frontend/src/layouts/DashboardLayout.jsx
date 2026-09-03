@@ -3,7 +3,8 @@ import Sidebar from "../components/common/Sidebar";
 
 const DashboardLayout = ({
   children,
-  villages,
+  villages = [],
+  hazards = [],
   districtFilter,
   setDistrictFilter,
   riskFilter,
@@ -12,7 +13,12 @@ const DashboardLayout = ({
   setHazardFilter,
   priorityFilter,
   setPriorityFilter,
+  onOpenAdminPanel,
 }) => {
+  const criticalCount = (villages || []).filter((v) => v.riskLevel === "CRITICAL").length;
+  const totalHabitations = (villages || []).length;
+  const totalHazards = (hazards || []).length;
+
   return (
     <div
       style={{
@@ -24,7 +30,12 @@ const DashboardLayout = ({
         background: "#f8fafc",
       }}
     >
-      <Header />
+      <Header
+        criticalCount={criticalCount}
+        totalHabitations={totalHabitations}
+        totalHazards={totalHazards}
+        onOpenAdminPanel={onOpenAdminPanel}
+      />
 
       <div
         style={{

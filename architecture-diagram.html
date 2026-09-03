@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>AI Disaster Risk Planner — Architecture Diagram</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #060b14;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .export-bar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-export {
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    color: white;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+  }
+  .btn-export:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,130,246,0.6); }
+
+  #diagram {
+    width: 1200px;
+    background: #0d1117;
+    border-radius: 20px;
+    border: 1px solid #1e2a3a;
+    padding: 40px;
+    box-shadow: 0 0 80px rgba(6,182,212,0.08), 0 0 0 1px #1a2332;
+  }
+
+  .title-block { text-align: center; margin-bottom: 36px; }
+  .title-block h1 {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .title-block p {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #4a6080;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .lane { display: flex; gap: 0; margin-bottom: 8px; align-items: stretch; }
+
+  .lane-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #334155;
+    min-width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #1a2332;
+    padding-right: 8px;
+    margin-right: 16px;
+  }
+
+  .lane-content { flex: 1; display: flex; gap: 14px; align-items: stretch; }
+
+  .card {
+    flex: 1;
+    border-radius: 12px;
+    padding: 16px 18px;
+    border: 1px solid transparent;
+    background: #111827;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .card.cyan   { border-color: #0e4a5a; box-shadow: 0 0 20px rgba(6,182,212,0.08); }
+  .card.cyan::before { background: linear-gradient(90deg, #06b6d4, #0891b2); }
+  .card.purple { border-color: #3b1a5a; box-shadow: 0 0 20px rgba(168,85,247,0.08); }
+  .card.purple::before { background: linear-gradient(90deg, #a855f7, #7c3aed); }
+  .card.amber  { border-color: #4a3000; box-shadow: 0 0 20px rgba(245,158,11,0.08); }
+  .card.amber::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .card.green  { border-color: #0a3a1a; box-shadow: 0 0 20px rgba(34,197,94,0.08); }
+  .card.green::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+  .card.blue   { border-color: #0a1f4a; box-shadow: 0 0 20px rgba(59,130,246,0.08); }
+  .card.blue::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .card.slate  { border-color: #1e2a3a; }
+  .card.slate::before { background: linear-gradient(90deg, #475569, #334155); }
+  .card.sky    { border-color: #0a2a4a; box-shadow: 0 0 20px rgba(56,189,248,0.08); }
+  .card.sky::before { background: linear-gradient(90deg, #38bdf8, #0ea5e9); }
+  .card.violet { border-color: #2d0a5a; box-shadow: 0 0 20px rgba(139,92,246,0.08); }
+  .card.violet::before { background: linear-gradient(90deg, #8b5cf6, #6d28d9); }
+  .card.teal   { border-color: #0a3a3a; box-shadow: 0 0 20px rgba(20,184,166,0.08); }
+  .card.teal::before { background: linear-gradient(90deg, #14b8a6, #0d9488); }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .card-subtitle {
+    font-size: 10px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 10px 0 5px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1e2a3a;
+  }
+
+  .card ul { list-style: none; padding: 0; }
+  .card ul li {
+    font-size: 11px;
+    color: #94a3b8;
+    padding: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.4;
+  }
+  .card ul li::before { content: 'ss'; color: #334155; font-size: 13px; line-height: 1; flex-shrink: 0; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    background: #1a2332;
+    color: #64748b;
+    border: 1px solid #1e2a3a;
+    margin-top: 6px;
+    margin-right: 4px;
+  }
+
+  .badge.cyan   { background: #0a2a35; color: #06b6d4; border-color: #0e4a5a; }
+  .badge.amber  { background: #2a1a00; color: #f59e0b; border-color: #4a3000; }
+  .badge.green  { background: #061a0c; color: #22c55e; border-color: #0a3a1a; }
+  .badge.blue   { background: #050f2a; color: #3b82f6; border-color: #0a1f4a; }
+  .badge.purple { background: #1a0a2a; color: #a855f7; border-color: #3b1a5a; }
+  .badge.sky    { background: #031a2a; color: #38bdf8; border-color: #0a2a4a; }
+  .badge.violet { background: #12053a; color: #8b5cf6; border-color: #2d0a5a; }
+  .badge.teal   { background: #031a1a; color: #14b8a6; border-color: #0a3a3a; }
+
+  .module {
+    background: #0a1525;
+    border: 1px solid #1a2a3a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .module-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .module-name { font-size: 11px; font-weight: 700; color: #e2e8f0; }
+  .module-desc { font-size: 10px; color: #64748b; margin-top: 1px; }
+
+  .arrow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 46px;
+    gap: 0;
+  }
+
+  .arrow-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .arrow-line {
+    width: 2px;
+    height: 20px;
+    border-radius: 1px;
+    margin: 0 auto;
+  }
+
+  .arrow-label {
+    font-size: 9px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    text-align: center;
+  }
+
+  .arr-amber  .arrow-line { background: linear-gradient(to bottom, transparent, #f59e0b); }
+  .arr-amber  .arrow-label { background: #2a1a00; color: #f59e0b; border: 1px solid #4a3000; }
+  .arr-green  .arrow-line { background: linear-gradient(to bottom, transparent, #22c55e); }
+  .arr-green  .arrow-label { background: #061a0c; color: #22c55e; border: 1px solid #0a3a1a; }
+  .arr-sky    .arrow-line { background: linear-gradient(to bottom, transparent, #38bdf8); }
+  .arr-sky    .arrow-label { background: #031a2a; color: #38bdf8; border: 1px solid #0a2a4a; }
+  .arr-blue   .arrow-line { background: linear-gradient(to bottom, transparent, #3b82f6); }
+  .arr-blue   .arrow-label { background: #050f2a; color: #3b82f6; border: 1px solid #0a1f4a; }
+  .arr-violet .arrow-line { background: linear-gradient(to bottom, transparent, #8b5cf6); }
+  .arr-violet .arrow-label { background: #12053a; color: #8b5cf6; border: 1px solid #2d0a5a; }
+  .arr-white  .arrow-line { background: linear-gradient(to bottom, transparent, #334155); }
+  .arr-white  .arrow-label { background: #0d1117; color: #64748b; border: 1px solid #1e2a3a; }
+  .arr-orange .arrow-line { background: linear-gradient(to bottom, transparent, #fb923c); }
+  .arr-orange .arrow-label { background: #2a1000; color: #fb923c; border: 1px solid #4a2000; }
+
+  .port {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #06b6d4;
+    background: #0a2a35;
+    border: 1px solid #0e4a5a;
+    border-radius: 4px;
+    padding: 1px 6px;
+    display: inline-block;
+    margin-top: 8px;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #1a2332;
+    font-size: 10px;
+    color: #2a3a4a;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="export-bar">
+  <button class="btn btn-export" onclick="exportPNG()">&#11015; Export as PNG</button>
+</div>
+
+<div id="diagram">
+
+  <div class="title-block">
+    <h1>AI Disaster Risk Planner &#8212; Full-Stack Architecture</h1>
+    <p>SIH 2026 &nbsp;|&nbsp; React + Spring Boot + FastAPI + PostGIS + Groq AI &nbsp;|&nbsp; Microservices + AI/ML + Geospatial</p>
+  </div>
+
+  <!-- LANE 1: USER INTERFACES -->
+  <div class="lane">
+    <div class="lane-label" style="color:#06b6d4">User Interfaces</div>
+    <div class="lane-content">
+      <div class="card cyan" style="flex:1.4">
+        <div class="card-title">&#128506; Citizen Dashboard</div>
+        <ul>
+          <li>Dashboard.jsx &#8212; main React page</li>
+          <li>Interactive Map View (Leaflet + React-Leaflet)</li>
+          <li>Village Detail Panel &#8212; risk score, XAI breakdown, AI summary</li>
+          <li>Weather Report Widget &#8212; WMO codes, 12h forecast</li>
+          <li>Map Legend &#8212; SAFE / LOW / MEDIUM / HIGH / CRITICAL tiers</li>
+          <li>Hazard Filter, Sidebar Navigation, VillageMarkers</li>
+        </ul>
+        <div>
+          <span class="badge cyan">React 19</span>
+          <span class="badge cyan">Vite 8</span>
+          <span class="badge cyan">Tailwind CSS v4</span>
+          <span class="badge cyan">Leaflet</span>
+          <span class="badge cyan">Axios</span>
+        </div>
+        <div class="port">:5173</div>
+      </div>
+      <div class="card purple" style="flex:1">
+        <div class="card-title">&#128295; Relocation Admin Panel</div>
+        <ul>
+          <li>Admin React App (Vite + React 19)</li>
+          <li>Relocation Decision Management</li>
+          <li>User / Role Management</li>
+          <li>JWT-authenticated REST calls</li>
+          <li>OxLint for code quality</li>
+        </ul>
+        <div>
+          <span class="badge purple">React 19</span>
+          <span class="badge purple">Vite 8</span>
+          <span class="badge purple">React Router v7</span>
+          <span class="badge purple">OxLint</span>
+        </div>
+        <div class="port" style="color:#a855f7;background:#1a0a2a;border-color:#3b1a5a">:5174</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW 1 -->
+  <div class="arrow-row">
+    <div class="arrow-group arr-white">
+      <div class="arrow-label">User interactions / state updates</div>
+      <div class="arrow-line"></div>
+      <div style="font-size:10px;color:#334155">&#9660;</div>
+    </div>
+  </div>
+
+  <!-- LANE 2: FRONTEND SERVICES -->
+  <div class="lane">
+    <div class="lane-label" style="color:#14b8a6">Frontend Services</div>
+    <div class="lane-content">
+      <div class="card teal">
+        <div class="card-title" style="font-size:12px">&#128225; api.js</div>
+        <ul>
+          <li>Fetches villages from Spring Boot</li>
+          <li>Enriches with ML risk scores + XAI</li>
+          <li>Gets relocation sites</li>
+          <li>Falls back to static local utils</li>
+        </ul>
+      </div>
+      <div class="card teal">
+        <div class="card-title" style="font-size:12px">&#127780; weatherService.js</div>
+        <ul>
+          <li>Open-Meteo NWP API calls</li>
+          <li>WMO weather code mapping</li>
+          <li>Hazard level assignment</li>
+          <li>12-hour hourly forecast</li>
+        </ul>
+      </div>
+      <div class="card teal" style="flex:1.5">
+        <div class="card-title" style="font-size:12px">&#9889; riskFusionService.js</div>
+        <ul>
+          <li>Live Dynamic Risk Tier: SAFE &#8594; CRITICAL</li>
+          <li>Fuses baseline geospatial + real-time weather</li>
+          <li>Water / terrain detection (Arabian Sea, Bay of Bengal)</li>
+          <li>Proximity-ranked shelter recommendations</li>
+          <li>District-level disaster assessment reports</li>
+        </ul>
+      </div>
+      <div class="card teal">
+        <div class="card-title" style="font-size:12px">&#128680; liveThreatService.js</div>
+        <ul>
+          <li>Real-time threat monitoring</li>
+          <li>Live alert generation</li>
+          <li>Threat level aggregation</li>
+          <li>Event-driven updates</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW 2 -->
+  <div class="arrow-row" style="gap:14px">
+    <div class="arrow-group arr-amber" style="flex:1.2">
+      <div class="arrow-label">GET /api/villages &middot; /api/risk-scores/batch &middot; /api/relocation-sites</div>
+      <div class="arrow-line"></div>
+      <div style="font-size:10px;color:#f59e0b">&#9660;</div>
+    </div>
+    <div class="arrow-group arr-green" style="flex:0.8">
+      <div class="arrow-label">GET /api/risk-scores</div>
+      <div class="arrow-line"></div>
+      <div style="font-size:10px;color:#22c55e">&#9660;</div>
+    </div>
+    <div class="arrow-group arr-sky" style="flex:0.6">
+      <div class="arrow-label">HTTPS Weather fetch</div>
+      <div class="arrow-line"></div>
+      <div style="font-size:10px;color:#38bdf8">&#9660;</div>
+    </div>
+  </div>
+
+  <!-- LANE 3: BACKEND SERVICES -->
+  <div class="lane">
+    <div class="lane-label" style="color:#f59e0b">Backend Services</div>
+    <div class="lane-content">
+      <div class="card amber" style="flex:1.2">
+        <div class="card-title">&#9749; Spring Boot 3.3.4 &#8212; Java 17</div>
+        <div class="card-subtitle">Controllers (9 REST Endpoints)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px">
+          <span class="badge amber">/api/auth</span>
+          <span class="badge amber">/api/villages</span>
+          <span class="badge amber">/api/hazard-zones</span>
+          <span class="badge amber">/api/risk-scores</span>
+          <span class="badge amber">/api/relocation-sites</span>
+          <span class="badge amber">/api/relocation-decisions</span>
+          <span class="badge amber">/api/prioritization</span>
+          <span class="badge amber">/api/dashboard</span>
+          <span class="badge amber">/api/audit-logs</span>
+        </div>
+        <div class="card-subtitle" style="margin-top:10px">JPA Entities (8)</div>
+        <ul>
+          <li>Village &middot; HazardZone &middot; RiskAssessment</li>
+          <li>RelocationSite &middot; RelocationDecision</li>
+          <li>PrioritizationResult &middot; AppUser &middot; AuditLog</li>
+        </ul>
+        <div class="card-subtitle" style="margin-top:8px">Infrastructure</div>
+        <ul>
+          <li>Spring Security + JWT (JJWT 0.12.6)</li>
+          <li>Hibernate Spatial &#8212; geometry columns</li>
+          <li>JTS 1.19.0 + Jackson GeoJSON</li>
+          <li>Flyway &#8212; schema version migrations</li>
+          <li>Lombok &middot; Docker containerized</li>
+        </ul>
+        <div class="port">:8080</div>
+      </div>
+      <div class="card green" style="flex:1">
+        <div class="card-title">&#128013; FastAPI ML Service &#8212; Python</div>
+        <div class="module">
+          <div class="module-icon">&#128202;</div>
+          <div>
+            <div class="module-name">Risk Scorer</div>
+            <div class="module-desc">Weighted multi-factor geospatial risk computation</div>
+          </div>
+        </div>
+        <div class="module">
+          <div class="module-icon">&#128270;</div>
+          <div>
+            <div class="module-name">Explainability (XAI)</div>
+            <div class="module-desc">Factor contribution %, dominant factor, plain-English rationale</div>
+          </div>
+        </div>
+        <div class="module">
+          <div class="module-icon">&#127919;</div>
+          <div>
+            <div class="module-name">Optimizer</div>
+            <div class="module-desc">Hungarian algorithm (scipy) &#8212; globally optimal village&#8594;site assignments</div>
+          </div>
+        </div>
+        <div class="module">
+          <div class="module-icon">&#128680;</div>
+          <div>
+            <div class="module-name">Anomaly Detector</div>
+            <div class="module-desc">IsolationForest (scikit-learn) &#8212; flags outlier habitations</div>
+          </div>
+        </div>
+        <div class="module">
+          <div class="module-icon">&#129302;</div>
+          <div>
+            <div class="module-name">LLM Summarizer</div>
+            <div class="module-desc">Groq compound-mini &#8212; 2&#8211;3 line AI executive risk summaries</div>
+          </div>
+        </div>
+        <div>
+          <span class="badge green">FastAPI</span>
+          <span class="badge green">Uvicorn</span>
+          <span class="badge green">scikit-learn</span>
+          <span class="badge green">scipy</span>
+          <span class="badge green">pandas</span>
+        </div>
+        <div class="port" style="color:#22c55e;background:#061a0c;border-color:#0a3a1a">:8001</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW 3 -->
+  <div class="arrow-row" style="gap:14px">
+    <div class="arrow-group arr-blue" style="flex:1.2">
+      <div class="arrow-label">JDBC / Hibernate JPA</div>
+      <div class="arrow-line"></div>
+      <div style="font-size:10px;color:#3b82f6">&#9660;</div>
+    </div>
+    <div class="arrow-group arr-orange" style="flex:1">
+      <div class="arrow-label" style="font-size:8.5px">ML &#8651; Boot: POST /api/auth/login + /api/risk-scores/batch</div>
+      <div class="arrow-line" style="background:linear-gradient(to bottom,transparent,#fb923c)"></div>
+      <div style="font-size:10px;color:#fb923c">&#8645;</div>
+    </div>
+  </div>
+
+  <!-- LANE 4: DATA LAYER -->
+  <div class="lane">
+    <div class="lane-label" style="color:#3b82f6">Data Layer</div>
+    <div class="lane-content">
+      <div class="card blue" style="flex:1.2">
+        <div class="card-title">&#128024; PostgreSQL 16 + PostGIS 3.4</div>
+        <ul>
+          <li>Database: <code style="font-family:monospace;font-size:10px;color:#60a5fa">disaster_relocation</code></li>
+          <li>Geospatial columns: POINT, POLYGON geometry types</li>
+          <li>Spatial queries via PostGIS functions</li>
+          <li>Flyway versioned schema migrations</li>
+          <li>Docker container with persistent volume</li>
+          <li>Health-check gated startup</li>
+        </ul>
+        <div>
+          <span class="badge blue">postgis/postgis:16-3.4</span>
+          <span class="badge blue">Docker</span>
+        </div>
+        <div class="port" style="color:#3b82f6;background:#050f2a;border-color:#0a1f4a">:5432</div>
+      </div>
+      <div class="card slate">
+        <div class="card-title">&#128196; Static CSV Data</div>
+        <ul>
+          <li>habitations_FINAL_checked.csv</li>
+          <li>relocation_sites_FINAL.csv</li>
+          <li>In-browser fallback: villages.js</li>
+          <li>hazards.js &middot; relocationSites.js</li>
+        </ul>
+        <div style="margin-top:8px;font-size:10px;color:#334155">Seed data read via pandas read_csv()</div>
+      </div>
+      <div class="card slate">
+        <div class="card-title">&#128260; In-Memory Cache</div>
+        <ul>
+          <li>terrainCache &#8212; water body reverse geocode</li>
+          <li>ML risk score map (villageId &#8594; score)</li>
+          <li>Weather fetch deduplication</li>
+          <li>Shelter proximity computed results</li>
+        </ul>
+        <div style="margin-top:8px;font-size:10px;color:#334155">Client-side JS Map() objects</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW 4 -->
+  <div class="arrow-row" style="gap:14px">
+    <div class="arrow-group arr-sky" style="flex:1">
+      <div class="arrow-label">HTTPS weather fetch (no API key required)</div>
+      <div class="arrow-line"></div>
+      <div style="font-size:10px;color:#38bdf8">&#9660;</div>
+    </div>
+    <div class="arrow-group arr-violet" style="flex:1">
+      <div class="arrow-label">HTTPS POST /openai/v1/chat/completions</div>
+      <div class="arrow-line"></div>
+      <div style="font-size:10px;color:#8b5cf6">&#9660;</div>
+    </div>
+  </div>
+
+  <!-- LANE 5: EXTERNAL APIS -->
+  <div class="lane">
+    <div class="lane-label" style="color:#38bdf8">External APIs</div>
+    <div class="lane-content">
+      <div class="card sky">
+        <div class="card-title">&#127780; Open-Meteo NWP API</div>
+        <ul>
+          <li>High-resolution global numerical weather prediction</li>
+          <li>Real-time: temperature, precipitation, wind gusts, pressure</li>
+          <li>WMO weather codes (0&#8211;99) with hazard mapping</li>
+          <li>12-hour hourly forecast data</li>
+          <li>No API key required &#8212; fully open &amp; free</li>
+        </ul>
+        <div>
+          <span class="badge sky">api.open-meteo.com</span>
+          <span class="badge sky">Free &amp; Open</span>
+        </div>
+      </div>
+      <div class="card violet">
+        <div class="card-title">&#129302; Groq Cloud API</div>
+        <ul>
+          <li>Model: <code style="font-family:monospace;font-size:10px;color:#a78bfa">groq/compound-mini</code></li>
+          <li>Generates 2&#8211;3 line AI executive risk summaries</li>
+          <li>Expert geological &amp; environmental diagnostics</li>
+          <li>Concrete mitigation &amp; administrative directives</li>
+          <li>Auth: GROQ_API_KEY via .env</li>
+        </ul>
+        <div>
+          <span class="badge violet">api.groq.com</span>
+          <span class="badge violet">LLM</span>
+          <span class="badge violet">compound-mini</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    AI Disaster Risk Planner &nbsp;&middot;&nbsp; SIH 2026 (SIH26191) &nbsp;&middot;&nbsp;
+    React + Spring Boot + FastAPI + PostgreSQL/PostGIS + Groq AI
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  async function exportPNG() {
+    const btn = document.querySelector('.btn-export');
+    btn.textContent = 'Rendering...';
+    btn.disabled = true;
+    const bar = document.querySelector('.export-bar');
+    bar.style.display = 'none';
+    try {
+      const canvas = await html2canvas(document.getElementById('diagram'), {
+        scale: 2,
+        backgroundColor: '#0d1117',
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = 'ai-disaster-risk-planner-architecture.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (e) {
+      alert('Export failed: ' + e.message);
+    } finally {
+      bar.style.display = 'flex';
+      btn.textContent = '&#11015; Export as PNG';
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

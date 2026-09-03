@@ -110,36 +110,52 @@ const Dashboard = () => {
           display: "flex",
           flexDirection: "column",
           height: "100%",
-          gap: "10px",
+          minHeight: 0,
+          gap: "8px",
+          overflow: "hidden",
+          boxSizing: "border-box",
         }}
       >
         {/* DISTRICT LIVE REPORT BANNER (WHEN DISTRICT FILTER ACTIVE) */}
         {districtFilter !== "ALL" && (
-          <DistrictLiveReportBanner
-            district={districtFilter}
-            villages={villagesList}
-            hazards={hazardsList}
-            onSelectLocation={(loc) => {
-              setSelectedVillage(loc);
-              if (loc.lat && loc.lng) setFocusLocation({ lat: loc.lat, lng: loc.lng });
-            }}
-            onResetDistrict={() => setDistrictFilter("ALL")}
-          />
+          <div style={{ flexShrink: 0 }}>
+            <DistrictLiveReportBanner
+              district={districtFilter}
+              villages={villagesList}
+              hazards={hazardsList}
+              onSelectLocation={(loc) => {
+                setSelectedVillage(loc);
+                if (loc.lat && loc.lng) setFocusLocation({ lat: loc.lat, lng: loc.lng });
+              }}
+              onResetDistrict={() => setDistrictFilter("ALL")}
+            />
+          </div>
         )}
 
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 340px",
-            gap: "14px",
+            gap: "12px",
             flex: 1,
+            height: "100%",
             minHeight: 0,
+            overflow: "hidden",
           }}
         >
           {/* ================================= */}
           {/* MAP SECTION */}
           {/* ================================= */}
-          <div style={{ position: "relative", height: "100%" }}>
+          <div
+            style={{
+              position: "relative",
+              height: "100%",
+              minHeight: 0,
+              overflow: "hidden",
+              borderRadius: "12px",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            }}
+          >
             {/* TOP SEARCH & ANOMALY FILTER HUD */}
             <div
               style={{
@@ -207,9 +223,14 @@ const Dashboard = () => {
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "12px",
+              gap: "10px",
               overflowY: "auto",
-              paddingRight: "2px",
+              overscrollBehavior: "contain",
+              height: "100%",
+              maxHeight: "100%",
+              minHeight: 0,
+              paddingRight: "4px",
+              boxSizing: "border-box",
             }}
           >
             <SummaryCards villages={filteredVillages} />
